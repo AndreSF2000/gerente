@@ -175,7 +175,7 @@ export default function WhatsAppExport({ state, week, onClose }: Props) {
               aria-pressed={range === "month"}
               onClick={() => setRange("month")}
             >
-              Mês completo
+              Mês
             </button>
           </div>
           <span className="range-summary">

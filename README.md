@@ -185,8 +185,10 @@ supabase/
 ## Versões
 
 Cada publicação é marcada com uma tag Git (`v0.1`, `v0.2`, …) e a versão
-aparece no rodapé do site. A versão atual é **v0.6**.
+aparece no rodapé do site. A versão atual é **v0.7**.
 
+- **v0.7** — o botão de exportação do mês na partilha por WhatsApp passa a
+  chamar-se apenas **Mês**.
 - **v0.6** — o mínimo de cobertura da equipa passa a excluir os pizzaiolos; os
   dois mínimos são independentes.
 - **v0.5** — opção **Mês completo** na partilha por WhatsApp, com a imagem e a
