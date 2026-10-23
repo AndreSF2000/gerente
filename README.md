@@ -25,7 +25,9 @@ login: abre o site, escolhe a semana e clica nos turnos.
   com os pizzaiolos, que têm um mínimo próprio em cada turno; a quantidade é
   escolhida numa lista.
 - Exportação do horário como imagem no estilo do horário de atendimento do
-  Mr Pizza, pronta para enviar no WhatsApp (semana, 4 semanas ou mês completo).
+  Mr Pizza, pronta para enviar no WhatsApp (semana, 4 semanas ou mês completo),
+  com escolha entre todos, só pizzaiolos ou só outros colaboradores para
+  enviar a grupos separados.
 - Os pizzaiolos aparecem num grupo próprio, separados dos restantes
   colaboradores, tanto no horário como na imagem exportada. Basta a função
   conter “Pizzaiolo” (ou “Pizzaiola”).
@@ -177,7 +179,7 @@ components/
   ScheduleView.tsx     Grelha semanal, totais e avisos
   TeamView.tsx         Gestão da equipa
   SettingsView.tsx     Turnos, cobertura (equipa sem pizzaiolos e pizzaiolos) e backup
-  WhatsAppExport.tsx   Pré-visualização e partilha por WhatsApp (semana, 4 semanas ou mês)
+  WhatsAppExport.tsx   Pré-visualização e partilha por WhatsApp (período e grupo)
 lib/
   dates.ts             Datas e formatação em português
   export-image.ts      Desenho da imagem do horário para WhatsApp
@@ -191,10 +193,12 @@ supabase/
 
 ## Versões
 
-Cada publicação é marcada com uma tag Git (`v0.0.7`, `v0.0.8`, …) e a versão
+Cada publicação é marcada com uma tag Git (`v0.1.0`, `v0.1.1`, …) e a versão
 aparece no rodapé do site. A numeração passou a usar três números para subir
-mais devagar. A versão atual é **v0.0.9**.
+mais devagar. A versão atual é **v0.1.0**.
 
+- **v0.1.0** — partilha separada por grupo: todos, só pizzaiolos ou só outros
+  colaboradores, com imagem, legenda e ficheiro próprios.
 - **v0.0.9** — ecrã de abertura animado com a logo do Mr Pizza enquanto o
   horário carrega.
 - **v0.0.8** — escolha da função numa lista no telemóvel, igual ao computador,
@@ -217,7 +221,7 @@ mais devagar. A versão atual é **v0.0.9**.
   de pizzaiolos e modo móvel focado num dia, com calendário mensal.
 
 As etiquetas antigas `v0.1` a `v0.8` continuam no histórico do GitHub. A partir
-daqui a sequência é `v0.0.9`, `v0.1.0`.
+daqui a sequência é `v0.1.0`, `v0.1.1`, `v0.2.0`.
 
 ## Comandos
 

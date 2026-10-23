@@ -12,6 +12,13 @@ import { groupEmployees, hasEmployeeGroups } from "./team-groups";
 import type { ScheduleState, ShiftKey } from "./types";
 
 export type ExportRange = "week" | "fourWeeks" | "month";
+export type ExportGroup = "all" | "pizzaiolos" | "others";
+
+export function exportGroupLabel(group: ExportGroup): string {
+  if (group === "pizzaiolos") return "Pizzaiolos";
+  if (group === "others") return "Outros colaboradores";
+  return "Toda a equipa";
+}
 
 type DrawableCanvas = {
   width: number;
@@ -96,21 +103,34 @@ export function exportRangeLabel(week: string, range: ExportRange): string {
   )}`;
 }
 
-export function exportFileBase(week: string, range: ExportRange): string {
+export function exportFileBase(
+  week: string,
+  range: ExportRange,
+  group: ExportGroup,
+): string {
   const start = exportRangeStart(week, range);
-  const suffix =
+  const rangeSuffix =
     range === "fourWeeks" ? "-4-semanas" : range === "month" ? "-mes" : "";
-  return `mr-pizza-horario-${start}${suffix}`;
+  const groupSuffix =
+    group === "pizzaiolos" ? "-pizzaiolos" : group === "others" ? "-outros" : "";
+  return `mr-pizza-horario-${start}${rangeSuffix}${groupSuffix}`;
 }
 
 export function buildShareCaption(
   state: ScheduleState,
   week: string,
   range: ExportRange,
+  group: ExportGroup,
 ): string {
   const { weekday, weekend } = state.settings;
+  const title =
+    group === "pizzaiolos"
+      ? "MR PIZZA · HORÁRIO DOS PIZZAIOLOS"
+      : group === "others"
+        ? "MR PIZZA · HORÁRIO DOS OUTROS COLABORADORES"
+        : "MR PIZZA · HORÁRIO DE ATENDIMENTO";
   return [
-    "MR PIZZA · HORÁRIO DE ATENDIMENTO",
+    title,
     exportRangeLabel(week, range),
     "",
     `${SHIFT_NAMES[0]}: ${weekday[0].start}–${weekday[0].end} (seg–qui e dom) · ${weekend[0].start}–${weekend[0].end} (sex e sáb)`,
@@ -148,10 +168,15 @@ export function drawScheduleImage(
   state: ScheduleState,
   week: string,
   range: ExportRange,
+  group: ExportGroup,
 ): void {
   const startDate = exportRangeStart(week, range);
   const dayCount = exportRangeDays(week, range);
-  const employeeGroups = groupEmployees(state.employees);
+  const allGroups = groupEmployees(state.employees);
+  const employeeGroups =
+    group === "all"
+      ? allGroups
+      : allGroups.filter((item) => item.key === group);
   const showGroups = hasEmployeeGroups(employeeGroups);
   const employees = employeeGroups.flatMap((group) => group.employees);
   const employeeCount = Math.max(1, employees.length);
@@ -204,7 +229,12 @@ export function drawScheduleImage(
   ctx.fillStyle = EXPORT_COLORS.navy;
   ctx.fillRect(tableX, titleY, tableWidth, TITLE_HEIGHT);
 
-  const title = "MR PIZZA - HORÁRIO DE ATENDIMENTO";
+  const title =
+    group === "pizzaiolos"
+      ? "MR PIZZA - HORÁRIO DOS PIZZAIOLOS"
+      : group === "others"
+        ? "MR PIZZA - HORÁRIO DOS OUTROS COLABORADORES"
+        : "MR PIZZA - HORÁRIO DE ATENDIMENTO";
   const rangeText = exportRangeShort(startDate, dayCount);
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";

@@ -5,9 +5,12 @@ import {
   buildShareCaption,
   drawScheduleImage,
   exportFileBase,
+  exportGroupLabel,
   exportRangeLabel,
+  type ExportGroup,
   type ExportRange,
 } from "@/lib/export-image";
+import { isPizzaiolo } from "@/lib/team-groups";
 import type { ScheduleState } from "@/lib/types";
 import { DownloadIcon, WhatsAppIcon } from "./icons";
 
@@ -19,19 +22,36 @@ type Props = {
 
 export default function WhatsAppExport({ state, week, onClose }: Props) {
   const [range, setRange] = useState<ExportRange>("week");
+  const [group, setGroup] = useState<ExportGroup>("all");
   const [file, setFile] = useState<File | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const groupCounts = useMemo(() => {
+    let pizzaiolos = 0;
+    for (const employee of state.employees) {
+      if (isPizzaiolo(employee)) pizzaiolos += 1;
+    }
+    return { pizzaiolos, others: state.employees.length - pizzaiolos };
+  }, [state.employees]);
   const fileName = useMemo(
-    () => `${exportFileBase(week, range)}.png`,
-    [week, range],
+    () => `${exportFileBase(week, range, group)}.png`,
+    [week, range, group],
   );
   const caption = useMemo(
-    () => buildShareCaption(state, week, range),
-    [state, week, range],
+    () => buildShareCaption(state, week, range, group),
+    [state, week, range, group],
   );
+
+  useEffect(() => {
+    if (
+      (group === "pizzaiolos" && groupCounts.pizzaiolos === 0) ||
+      (group === "others" && groupCounts.others === 0)
+    ) {
+      setGroup("all");
+    }
+  }, [group, groupCounts]);
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -58,7 +78,7 @@ export default function WhatsAppExport({ state, week, onClose }: Props) {
     setFile(null);
     setNote(null);
     setFallbackUrl(null);
-    drawScheduleImage(canvas, state, week, range);
+    drawScheduleImage(canvas, state, week, range, group);
     canvas.toBlob((blob) => {
       if (cancelled || !blob) return;
       setFile(
@@ -70,7 +90,7 @@ export default function WhatsAppExport({ state, week, onClose }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [state, week, range, fileName]);
+  }, [state, week, range, group, fileName]);
 
   const download = useCallback(() => {
     if (!file) return;
@@ -89,7 +109,12 @@ export default function WhatsAppExport({ state, week, onClose }: Props) {
 
     const shareData = {
       files: [file],
-      title: "Mr Pizza — horário da equipa",
+      title:
+        group === "pizzaiolos"
+          ? "Mr Pizza — horário dos pizzaiolos"
+          : group === "others"
+            ? "Mr Pizza — horário dos outros colaboradores"
+            : "Mr Pizza — horário da equipa",
       text: caption,
     };
 
@@ -120,7 +145,7 @@ export default function WhatsAppExport({ state, week, onClose }: Props) {
     if (!popup) {
       setNote("Imagem descarregada. Abre o WhatsApp e anexa a imagem.");
     }
-  }, [file, caption, download, onClose]);
+  }, [file, caption, download, onClose, group]);
 
   return (
     <div
@@ -183,19 +208,65 @@ export default function WhatsAppExport({ state, week, onClose }: Props) {
           </span>
         </div>
 
+        <div className="export-group-bar">
+          <span className="export-group-label">Mostrar</span>
+          <div
+            className="range-tabs"
+            role="group"
+            aria-label="Grupo de colaboradores"
+          >
+            <button
+              type="button"
+              className="range-tab"
+              aria-pressed={group === "all"}
+              onClick={() => setGroup("all")}
+            >
+              Todos
+            </button>
+            <button
+              type="button"
+              className="range-tab"
+              aria-pressed={group === "pizzaiolos"}
+              onClick={() => setGroup("pizzaiolos")}
+              disabled={groupCounts.pizzaiolos === 0}
+              title={
+                groupCounts.pizzaiolos === 0
+                  ? "Não há pizzaiolos na equipa"
+                  : "Ver só o horário dos pizzaiolos"
+              }
+            >
+              Pizzaiolos
+            </button>
+            <button
+              type="button"
+              className="range-tab"
+              aria-pressed={group === "others"}
+              onClick={() => setGroup("others")}
+              disabled={groupCounts.others === 0}
+              title={
+                groupCounts.others === 0
+                  ? "Não há outros colaboradores na equipa"
+                  : "Ver só o horário dos outros colaboradores"
+              }
+            >
+              Outros
+            </button>
+          </div>
+        </div>
+
         <div className="export-preview">
           <canvas
             ref={canvasRef}
-            aria-label={`Pré-visualização do horário de ${exportRangeLabel(
-              week,
-              range,
-            )}`}
+            aria-label={`Pré-visualização do horário (${exportGroupLabel(
+              group,
+            )}) de ${exportRangeLabel(week, range)}`}
           />
         </div>
 
         <p className="export-hint">
-          Dias sem turno aparecem como <strong>Folga</strong>. A imagem mantém
-          o estilo do horário de atendimento do Mr Pizza.
+          Escolhe <strong>Pizzaiolos</strong> ou <strong>Outros</strong> para
+          enviares o horário separado a cada grupo. Dias sem turno aparecem como{" "}
+          <strong>Folga</strong>.
         </p>
 
         {note && (

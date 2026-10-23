@@ -2653,6 +2653,27 @@ code {
   color: var(--muted);
 }
 
+.export-group-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: -2px 0 12px;
+}
+
+.export-group-label {
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.range-tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .export-preview {
   max-height: 48vh;
   max-height: 48dvh;
