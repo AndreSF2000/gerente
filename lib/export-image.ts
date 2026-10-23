@@ -16,7 +16,7 @@ export type ExportGroup = "all" | "pizzaiolos" | "others";
 
 export function exportGroupLabel(group: ExportGroup): string {
   if (group === "pizzaiolos") return "Pizzaiolos";
-  if (group === "others") return "Outros colaboradores";
+  if (group === "others") return "Colaboradores";
   return "Toda a equipa";
 }
 
@@ -112,7 +112,11 @@ export function exportFileBase(
   const rangeSuffix =
     range === "fourWeeks" ? "-4-semanas" : range === "month" ? "-mes" : "";
   const groupSuffix =
-    group === "pizzaiolos" ? "-pizzaiolos" : group === "others" ? "-outros" : "";
+    group === "pizzaiolos"
+      ? "-pizzaiolos"
+      : group === "others"
+        ? "-colaboradores"
+        : "";
   return `mr-pizza-horario-${start}${rangeSuffix}${groupSuffix}`;
 }
 
@@ -127,7 +131,7 @@ export function buildShareCaption(
     group === "pizzaiolos"
       ? "MR PIZZA · HORÁRIO DOS PIZZAIOLOS"
       : group === "others"
-        ? "MR PIZZA · HORÁRIO DOS OUTROS COLABORADORES"
+        ? "MR PIZZA · HORÁRIO DOS COLABORADORES"
         : "MR PIZZA · HORÁRIO DE ATENDIMENTO";
   return [
     title,
@@ -233,7 +237,7 @@ export function drawScheduleImage(
     group === "pizzaiolos"
       ? "MR PIZZA - HORÁRIO DOS PIZZAIOLOS"
       : group === "others"
-        ? "MR PIZZA - HORÁRIO DOS OUTROS COLABORADORES"
+        ? "MR PIZZA - HORÁRIO DOS COLABORADORES"
         : "MR PIZZA - HORÁRIO DE ATENDIMENTO";
   const rangeText = exportRangeShort(startDate, dayCount);
   ctx.textAlign = "right";

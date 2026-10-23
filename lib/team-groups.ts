@@ -19,7 +19,7 @@ export function isPizzaiolo(employee: Employee): boolean {
 }
 
 /**
- * Coloca os pizzaiolos primeiro e junta todos os outros colaboradores num
+ * Coloca os pizzaiolos primeiro e junta os restantes colaboradores num
  * segundo grupo. A ordem dentro de cada grupo mantém-se a da equipa.
  */
 export function groupEmployees(employees: Employee[]): EmployeeGroup[] {
@@ -45,7 +45,7 @@ export function groupEmployees(employees: Employee[]): EmployeeGroup[] {
   if (others.length > 0) {
     groups.push({
       key: "others",
-      label: "Outros colaboradores",
+      label: "Colaboradores",
       employees: others,
     });
   }

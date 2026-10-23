@@ -113,7 +113,7 @@ export default function WhatsAppExport({ state, week, onClose }: Props) {
         group === "pizzaiolos"
           ? "Mr Pizza — horário dos pizzaiolos"
           : group === "others"
-            ? "Mr Pizza — horário dos outros colaboradores"
+            ? "Mr Pizza — horário dos colaboradores"
             : "Mr Pizza — horário da equipa",
       text: caption,
     };
@@ -245,11 +245,11 @@ export default function WhatsAppExport({ state, week, onClose }: Props) {
               disabled={groupCounts.others === 0}
               title={
                 groupCounts.others === 0
-                  ? "Não há outros colaboradores na equipa"
-                  : "Ver só o horário dos outros colaboradores"
+                  ? "Não há colaboradores para mostrar"
+                  : "Ver só o horário dos colaboradores"
               }
             >
-              Outros
+              Colaboradores
             </button>
           </div>
         </div>
@@ -264,7 +264,7 @@ export default function WhatsAppExport({ state, week, onClose }: Props) {
         </div>
 
         <p className="export-hint">
-          Escolhe <strong>Pizzaiolos</strong> ou <strong>Outros</strong> para
+          Escolhe <strong>Pizzaiolos</strong> ou <strong>Colaboradores</strong> para
           enviares o horário separado a cada grupo. Dias sem turno aparecem como{" "}
           <strong>Folga</strong>.
         </p>

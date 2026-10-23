@@ -26,7 +26,7 @@ login: abre o site, escolhe a semana e clica nos turnos.
   escolhida numa lista.
 - Exportação do horário como imagem no estilo do horário de atendimento do
   Mr Pizza, pronta para enviar no WhatsApp (semana, 4 semanas ou mês completo),
-  com escolha entre todos, só pizzaiolos ou só outros colaboradores para
+  com escolha entre todos, só pizzaiolos ou só colaboradores para
   enviar a grupos separados.
 - Os pizzaiolos aparecem num grupo próprio, separados dos restantes
   colaboradores, tanto no horário como na imagem exportada. Basta a função
@@ -193,11 +193,13 @@ supabase/
 
 ## Versões
 
-Cada publicação é marcada com uma tag Git (`v0.1.0`, `v0.1.1`, …) e a versão
+Cada publicação é marcada com uma tag Git (`v0.1.1`, `v0.1.2`, …) e a versão
 aparece no rodapé do site. A numeração passou a usar três números para subir
-mais devagar. A versão atual é **v0.1.0**.
+mais devagar. A versão atual é **v0.1.1**.
 
-- **v0.1.0** — partilha separada por grupo: todos, só pizzaiolos ou só outros
+- **v0.1.1** — o grupo antes chamado “Outros colaboradores” passa a chamar-se
+  apenas **Colaboradores** em todo o site e na imagem.
+- **v0.1.0** — partilha separada por grupo: todos, só pizzaiolos ou só
   colaboradores, com imagem, legenda e ficheiro próprios.
 - **v0.0.9** — ecrã de abertura animado com a logo do Mr Pizza enquanto o
   horário carrega.
@@ -221,7 +223,7 @@ mais devagar. A versão atual é **v0.1.0**.
   de pizzaiolos e modo móvel focado num dia, com calendário mensal.
 
 As etiquetas antigas `v0.1` a `v0.8` continuam no histórico do GitHub. A partir
-daqui a sequência é `v0.1.0`, `v0.1.1`, `v0.2.0`.
+daqui a sequência é `v0.1.1`, `v0.1.2`, `v0.2.0`.
 
 ## Comandos
 
