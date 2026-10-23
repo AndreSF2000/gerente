@@ -44,6 +44,7 @@ import {
 type Props = {
   state: ScheduleState;
   week: string;
+  initialDay?: string;
   onWeekChange: (week: string) => void;
   onToggle: (date: string, employeeId: string, shift: ShiftKey) => void;
   onCopyPrevious: () => void;
@@ -53,6 +54,7 @@ type Props = {
 export default function ScheduleView({
   state,
   week,
+  initialDay,
   onWeekChange,
   onToggle,
   onCopyPrevious,
@@ -69,7 +71,9 @@ export default function ScheduleView({
   );
   const showGroups = hasEmployeeGroups(employeeGroups);
 
-  const [selectedDay, setSelectedDay] = useState(() => todayISO());
+  const [selectedDay, setSelectedDay] = useState(
+    () => initialDay ?? todayISO(),
+  );
   const [monthOpen, setMonthOpen] = useState(false);
   const [monthCursor, setMonthCursor] = useState(() => monthStart(todayISO()));
   const monthCells = useMemo(() => monthCalendar(monthCursor), [monthCursor]);

@@ -5,6 +5,8 @@ login: abre o site, escolhe a semana e clica nos turnos.
 
 ## Funcionalidades
 
+- O site abre num painel **Resumo** com os turnos de hoje, a cobertura da
+  semana, os avisos e atalhos para abrir cada dia no horário.
 - Grelha semanal de segunda a domingo com dois turnos por dia.
 - Horário próprio de fim de semana: sexta e sábado.
 - Atribuição de turnos com um clique e remoção imediata.
@@ -163,6 +165,7 @@ app/
   page.tsx             Página principal
 components/
   ScheduleApp.tsx      Estado, gravação automática e abas
+  OverviewView.tsx     Painel inicial com o resumo da equipa e da semana
   ScheduleView.tsx     Grelha semanal, totais e avisos
   TeamView.tsx         Gestão da equipa
   SettingsView.tsx     Turnos, cobertura mínima (equipa e pizzaiolos) e backup
@@ -181,8 +184,10 @@ supabase/
 ## Versões
 
 Cada publicação é marcada com uma tag Git (`v0.1`, `v0.2`, …) e a versão
-aparece no rodapé do site. A versão atual é **v0.3**.
+aparece no rodapé do site. A versão atual é **v0.4**.
 
+- **v0.4** — painel Resumo ao abrir o site, com os turnos de hoje, a cobertura
+  diária, os avisos e atalhos para cada dia da semana.
 - **v0.3** — instalação no iPhone como app no ecrã principal, com ícone
   próprio e abertura em ecrã inteiro.
 - **v0.2** — mínimo de pizzaiolos separado do resto da equipa em cada turno,

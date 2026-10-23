@@ -12,6 +12,7 @@ import type {
   ShiftKey,
   StorageMode,
 } from "@/lib/types";
+import OverviewView from "./OverviewView";
 import ScheduleView from "./ScheduleView";
 import SettingsView from "./SettingsView";
 import TeamView from "./TeamView";
@@ -20,7 +21,7 @@ import { PizzaIcon, PrinterIcon, WhatsAppIcon } from "./icons";
 
 const LOCAL_KEY = "mr-pizza-schedule-v1";
 
-type Tab = "schedule" | "team" | "settings";
+type Tab = "overview" | "schedule" | "team" | "settings";
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 function readLocalState(): ScheduleState | null {
@@ -106,7 +107,8 @@ export default function ScheduleApp() {
   const [state, setState] = useState<ScheduleState | null>(null);
   const [mode, setMode] = useState<StorageMode>("supabase");
   const [week, setWeek] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("schedule");
+  const [tab, setTab] = useState<Tab>("overview");
+  const [focusDay, setFocusDay] = useState<string | null>(null);
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -390,6 +392,17 @@ export default function ScheduleApp() {
     requestAnimationFrame(() => exportButtonRef.current?.focus());
   }, []);
 
+  const openSchedule = useCallback(() => {
+    setFocusDay(null);
+    setTab("schedule");
+  }, []);
+
+  const openDay = useCallback((date: string) => {
+    setFocusDay(date);
+    setWeek(weekStart(date));
+    setTab("schedule");
+  }, []);
+
   if (!state || !week) {
     return (
       <div className="shell">
@@ -446,8 +459,16 @@ export default function ScheduleApp() {
         <button
           type="button"
           className="tab"
+          aria-current={tab === "overview" ? "page" : undefined}
+          onClick={() => setTab("overview")}
+        >
+          Resumo
+        </button>
+        <button
+          type="button"
+          className="tab"
           aria-current={tab === "schedule" ? "page" : undefined}
-          onClick={() => setTab("schedule")}
+          onClick={openSchedule}
         >
           Horário
         </button>
@@ -514,10 +535,21 @@ export default function ScheduleApp() {
       )}
 
       <main className="main">
+        {tab === "overview" && (
+          <OverviewView
+            state={state}
+            week={week}
+            onOpenSchedule={openSchedule}
+            onOpenDay={openDay}
+            onGoTeam={() => setTab("team")}
+          />
+        )}
+
         {tab === "schedule" && (
           <ScheduleView
             state={state}
             week={week}
+            initialDay={focusDay ?? undefined}
             onWeekChange={setWeek}
             onToggle={toggleAssignment}
             onCopyPrevious={copyPreviousWeek}
