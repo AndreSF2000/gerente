@@ -7,6 +7,7 @@ login: abre o site, escolhe a semana e clica nos turnos.
 
 - O site abre num painel **Resumo** com os turnos de hoje, a cobertura da
   semana, os avisos e atalhos para abrir cada dia no horário.
+- Ecrã de abertura animado com a logo do Mr Pizza enquanto o horário carrega.
 - Grelha semanal de segunda a domingo com dois turnos por dia.
 - Horário próprio de fim de semana: sexta e sábado.
 - Atribuição de turnos com um clique e remoção imediata.
@@ -192,8 +193,10 @@ supabase/
 
 Cada publicação é marcada com uma tag Git (`v0.0.7`, `v0.0.8`, …) e a versão
 aparece no rodapé do site. A numeração passou a usar três números para subir
-mais devagar. A versão atual é **v0.0.8**.
+mais devagar. A versão atual é **v0.0.9**.
 
+- **v0.0.9** — ecrã de abertura animado com a logo do Mr Pizza enquanto o
+  horário carrega.
 - **v0.0.8** — escolha da função numa lista no telemóvel, igual ao computador,
   com opção de escrever uma função personalizada.
 - **v0.0.7** — zoom por pinça e zoom automático dos campos desativados no
@@ -214,7 +217,7 @@ mais devagar. A versão atual é **v0.0.8**.
   de pizzaiolos e modo móvel focado num dia, com calendário mensal.
 
 As etiquetas antigas `v0.1` a `v0.8` continuam no histórico do GitHub. A partir
-daqui a sequência é `v0.0.8`, `v0.0.9`, `v0.1.0`.
+daqui a sequência é `v0.0.9`, `v0.1.0`.
 
 ## Comandos
 

@@ -427,13 +427,27 @@ export default function ScheduleApp() {
 
   if (!state || !week) {
     return (
-      <div className="shell">
-        <header className="topbar">
-          <Brand />
-        </header>
-        <div className="loading-card card" role="status">
-          <span className="spinner" aria-hidden="true" />
-          <span>A carregar o horário…</span>
+      <div className="boot-screen" role="status" aria-live="polite">
+        <span className="sr-only">A carregar o horário…</span>
+
+        <div className="boot-stage" aria-hidden="true">
+          <span className="boot-halo" />
+          <span className="boot-ring" />
+          <span className="boot-mark">
+            <PizzaIcon className="boot-icon" />
+          </span>
+        </div>
+
+        <div className="boot-copy" aria-hidden="true">
+          <span className="boot-name">Mr Pizza</span>
+          <span className="boot-caption">
+            A preparar o horário
+            <span className="boot-dots">
+              <i />
+              <i />
+              <i />
+            </span>
+          </span>
         </div>
       </div>
     );
