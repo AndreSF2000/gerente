@@ -26,6 +26,8 @@ login: abre o site, escolhe a semana e clica nos turnos.
   mais escuro e folga em verde.
 - Impressão/PDF e exportação/importação de backup em JSON.
 - Gravação automática no Supabase.
+- Instalável no iPhone como app no ecrã principal (Safari → Partilhar →
+  Adicionar ao Ecrã Principal), sem barra do Safari e sem App Store.
 
 ## Correr localmente
 
@@ -114,6 +116,23 @@ outra.
 Também é aceite o nome antigo `SUPABASE_SERVICE_ROLE_KEY`, para projetos que
 ainda usam a chave `service_role` legada.
 
+## Instalar no iPhone (como app)
+
+Não é preciso TestFlight, perfil de empresa nem publicar na App Store. O site
+funciona como app instalada no ecrã principal:
+
+1. Abre **https://gerente-eta.vercel.app** no **Safari** do iPhone. Tem de ser o
+   Safari; o Chrome e o Firefox no iOS não instalam a app no ecrã principal.
+2. Toca no botão **Partilhar** (o quadrado com a seta para cima).
+3. Escolhe **Adicionar ao Ecrã Principal** (pode aparecer como “Adicionar ao
+   ecrã principal” ou “Adicionar à Tela de Início”).
+4. Dá o nome **Mr Pizza** e toca em **Adicionar**.
+
+O ícone vermelho do Mr Pizza fica no ecrã principal e abre o horário em ecrã
+inteiro, sem a barra de endereço do Safari. Como os dados estão no Supabase, a
+app precisa de internet; não é uma versão offline. Quando o site é atualizado,
+basta voltar a abrir a app para receber a versão nova.
+
 ## Dados, backup e segurança
 
 - Todos os dados são guardados numa única linha JSON na tabela
@@ -138,6 +157,7 @@ ainda usam a chave `service_role` legada.
 ```
 app/
   api/state/route.ts   API de leitura e gravação (Supabase ou ficheiro local)
+  manifest.ts          Manifesto da app instalada no iPhone
   globals.css          Estilos
   layout.tsx           Layout, fontes e metadados
   page.tsx             Página principal
@@ -161,8 +181,10 @@ supabase/
 ## Versões
 
 Cada publicação é marcada com uma tag Git (`v0.1`, `v0.2`, …) e a versão
-aparece no rodapé do site. A versão atual é **v0.2**.
+aparece no rodapé do site. A versão atual é **v0.3**.
 
+- **v0.3** — instalação no iPhone como app no ecrã principal, com ícone
+  próprio e abertura em ecrã inteiro.
 - **v0.2** — mínimo de pizzaiolos separado do resto da equipa em cada turno,
   escolhido numa lista, com avisos e linha de cobertura próprios.
 - **v0.1** — tabela semanal, exportação para WhatsApp, grupos de pizzaiolos e

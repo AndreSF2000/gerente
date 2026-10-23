@@ -19,6 +19,26 @@ export const metadata: Metadata = {
   title: "Mr Pizza · Horários da equipa",
   description:
     "Cria o horário semanal da equipa do Mr Pizza: turnos, horas por pessoa e avisos de cobertura.",
+  applicationName: "Mr Pizza",
+  appleWebApp: {
+    capable: true,
+    title: "Mr Pizza",
+    statusBarStyle: "default",
+  },
+  other: {
+    // O Next escreve mobile-web-app-capable; o Safari antigo só reconhece esta.
+    "apple-mobile-web-app-capable": "yes",
+  },
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
