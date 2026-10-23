@@ -191,6 +191,20 @@ button {
   background: var(--brand);
 }
 
+.save-pill.offline {
+  color: #7a5514;
+  background: #fdf4e3;
+  border-color: #f0dcb4;
+}
+
+.save-pill.offline .save-dot {
+  background: var(--amber);
+}
+
+.save-pill.offline .save-retry {
+  color: #7a5514;
+}
+
 .save-retry {
   border: 0;
   background: transparent;

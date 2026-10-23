@@ -35,6 +35,10 @@ login: abre o site, escolhe a semana e clica nos turnos.
   mais escuro e folga em verde.
 - Impressão/PDF e exportação/importação de backup em JSON.
 - Gravação automática no Supabase.
+- **Modo offline**: sem internet, o horário continua a funcionar e as alterações
+  ficam guardadas no dispositivo (aparece **Guardado offline** no topo). Quando
+  a ligação volta, são enviadas sozinhas para o Supabase, mesmo que feches e
+  voltes a abrir a app entretanto.
 - Instalável no iPhone como app no ecrã principal (Safari → Partilhar →
   Adicionar ao Ecrã Principal), sem barra do Safari e sem App Store.
 
@@ -195,8 +199,11 @@ supabase/
 
 Cada publicação é marcada com uma tag Git (`v0.1.1`, `v0.1.2`, …) e a versão
 aparece no rodapé do site. A numeração passou a usar três números para subir
-mais devagar. A versão atual é **v0.1.1**.
+mais devagar. A versão atual é **v0.1.2**.
 
+- **v0.1.2** — modo offline: dá para continuar a preparar o horário sem
+  internet; as alterações ficam no dispositivo e sobem sozinhas quando a
+  ligação volta.
 - **v0.1.1** — o grupo antes chamado “Outros colaboradores” passa a chamar-se
   apenas **Colaboradores** em todo o site e na imagem.
 - **v0.1.0** — partilha separada por grupo: todos, só pizzaiolos ou só

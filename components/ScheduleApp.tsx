@@ -20,9 +20,13 @@ import WhatsAppExport from "./WhatsAppExport";
 import { PizzaIcon, PrinterIcon, WhatsAppIcon } from "./icons";
 
 const LOCAL_KEY = "mr-pizza-schedule-v1";
+const PENDING_KEY = "mr-pizza-schedule-v1-pending";
+
+const LOAD_TIMEOUT_MS = 8000;
+const SYNC_RETRY_MS = 15000;
 
 type Tab = "overview" | "schedule" | "team" | "settings";
-type SaveStatus = "idle" | "saving" | "saved" | "error";
+type SaveStatus = "idle" | "saving" | "saved" | "offline" | "error";
 
 function readLocalState(): ScheduleState | null {
   try {
@@ -35,7 +39,36 @@ function readLocalState(): ScheduleState | null {
 }
 
 function writeLocalState(state: ScheduleState): void {
-  window.localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+  try {
+    window.localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+  } catch {
+    // Sem espaço ou modo privado: a gravação online continua a tentar.
+  }
+}
+
+/** Fica a "1" enquanto houver alterações deste dispositivo por enviar. */
+function hasPendingLocal(): boolean {
+  try {
+    return window.localStorage.getItem(PENDING_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markPendingLocal(value: boolean): void {
+  try {
+    if (value) {
+      window.localStorage.setItem(PENDING_KEY, "1");
+    } else {
+      window.localStorage.removeItem(PENDING_KEY);
+    }
+  } catch {
+    // Sem armazenamento local não há fila offline para guardar.
+  }
+}
+
+function isOnline(): boolean {
+  return typeof navigator === "undefined" || navigator.onLine !== false;
 }
 
 function formatSavedAt(iso: string | null): string {
@@ -88,6 +121,22 @@ function SaveIndicator({
     );
   }
 
+  if (status === "offline") {
+    return (
+      <span
+        className="save-pill offline"
+        role="status"
+        title="As alterações estão guardadas neste dispositivo e são enviadas quando houver ligação."
+      >
+        <span className="save-dot" />
+        Guardado offline
+        <button type="button" className="save-retry" onClick={onRetry}>
+          Enviar
+        </button>
+      </span>
+    );
+  }
+
   const label =
     status === "saving"
       ? "A guardar…"
@@ -114,8 +163,11 @@ export default function ScheduleApp() {
   const [notice, setNotice] = useState<string | null>(null);
   const [localBackup, setLocalBackup] = useState<ScheduleState | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
+  const [pending, setPending] = useState(false);
   const exportButtonRef = useRef<HTMLButtonElement>(null);
   const dirtyRef = useRef(false);
+  const pendingRef = useRef<ScheduleState | null>(null);
+  const saveSeqRef = useRef(0);
 
   // Evita o zoom por pinça no iPhone, que desalinha a tabela e os botões.
   useEffect(() => {
@@ -142,10 +194,47 @@ export default function ScheduleApp() {
   useEffect(() => {
     let cancelled = false;
 
+    const useCached = (message: string) => {
+      if (cancelled) return;
+      setState(readLocalState() ?? defaultState());
+      setNotice(message);
+    };
+
     async function load() {
       setWeek(weekStart(todayISO()));
+
+      // Alterações que ficaram por enviar neste dispositivo têm prioridade.
+      const queued = hasPendingLocal() ? readLocalState() : null;
+      if (queued) {
+        if (cancelled) return;
+        setState(queued);
+        pendingRef.current = queued;
+        setPending(true);
+        setStatus("offline");
+        setNotice(
+          "Há alterações guardadas neste dispositivo à espera de ligação. Estão a ser enviadas.",
+        );
+        return;
+      }
+
+      if (!isOnline()) {
+        useCached(
+          "Estás sem internet. Podes continuar a preparar o horário: as alterações ficam neste dispositivo e são enviadas quando voltares a ter ligação.",
+        );
+        return;
+      }
+
+      const controller = new AbortController();
+      const timeout = window.setTimeout(
+        () => controller.abort(),
+        LOAD_TIMEOUT_MS,
+      );
+
       try {
-        const response = await fetch("/api/state", { cache: "no-store" });
+        const response = await fetch("/api/state", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
         if (response.status === 503) {
           const payload = (await response.json().catch(() => null)) as {
             code?: string;
@@ -179,12 +268,11 @@ export default function ScheduleApp() {
           setLocalBackup(local);
         }
       } catch {
-        if (cancelled) return;
-        setMode("local");
-        setState(readLocalState() ?? defaultState());
-        setNotice(
-          "Sem ligação ao servidor. As alterações ficam guardadas só neste navegador.",
+        useCached(
+          "Sem ligação ao servidor. Podes continuar a editar: as alterações ficam neste dispositivo e são enviadas quando voltares a ter internet.",
         );
+      } finally {
+        window.clearTimeout(timeout);
       }
     }
 
@@ -196,16 +284,16 @@ export default function ScheduleApp() {
 
   const persist = useCallback(
     async (next: ScheduleState) => {
+      // Cópia local sempre atualizada: é ela que arranca o modo offline.
+      writeLocalState(next);
+
       if (mode === "local") {
-        try {
-          writeLocalState(next);
-          setSavedAt(new Date().toISOString());
-          setStatus("saved");
-        } catch {
-          setStatus("error");
-        }
+        setSavedAt(new Date().toISOString());
+        setStatus("saved");
         return;
       }
+
+      const seq = ++saveSeqRef.current;
 
       try {
         const response = await fetch("/api/state", {
@@ -213,18 +301,72 @@ export default function ScheduleApp() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(next),
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        if (response.status === 503) {
+          const payload = (await response.json().catch(() => null)) as {
+            code?: string;
+          } | null;
+          if (payload?.code === "no-database") {
+            if (seq !== saveSeqRef.current) return;
+            setMode("local");
+            markPendingLocal(false);
+            pendingRef.current = null;
+            setPending(false);
+            setSavedAt(new Date().toISOString());
+            setStatus("saved");
+            return;
+          }
+        }
+
+        if (!response.ok) {
+          // Erros do pedido (dados inválidos) não melhoram a tentar outra vez.
+          if (response.status < 500) {
+            if (seq === saveSeqRef.current) setStatus("error");
+            return;
+          }
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        if (seq !== saveSeqRef.current) return;
         const payload = (await response.json().catch(() => null)) as {
           updatedAt?: string;
         } | null;
         setSavedAt(payload?.updatedAt ?? new Date().toISOString());
         setStatus("saved");
+        markPendingLocal(false);
+        pendingRef.current = null;
+        setPending(false);
       } catch {
-        setStatus("error");
+        if (seq !== saveSeqRef.current) return;
+        pendingRef.current = next;
+        markPendingLocal(true);
+        setPending(true);
+        setStatus("offline");
       }
     },
     [mode],
   );
+
+  // Envia a fila local assim que houver ligação e volta a tentar de tempos a tempos.
+  useEffect(() => {
+    if (!pending) return;
+
+    const flush = () => {
+      const queued = pendingRef.current;
+      if (!queued || !isOnline()) return;
+      void persist(queued);
+    };
+
+    const first = window.setTimeout(flush, 1200);
+    const timer = window.setInterval(flush, SYNC_RETRY_MS);
+    window.addEventListener("online", flush);
+
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(timer);
+      window.removeEventListener("online", flush);
+    };
+  }, [pending, persist]);
 
   useEffect(() => {
     if (!state || !dirtyRef.current) return;
@@ -397,9 +539,10 @@ export default function ScheduleApp() {
   );
 
   const retrySave = useCallback(() => {
-    if (!state) return;
+    const next = pendingRef.current ?? state;
+    if (!next) return;
     setStatus("saving");
-    void persist(state);
+    void persist(next);
   }, [state, persist]);
 
   const importLocalBackup = useCallback(() => {
