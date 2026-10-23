@@ -1,13 +1,18 @@
 "use client";
 
-import { Fragment, useMemo } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { SHIFT_NAMES } from "@/lib/defaults";
 import {
   addDays,
+  addMonths,
   dayMonth,
   dayMonthLong,
+  dayNumber,
   isWeekendDay,
   isoWeekNumber,
+  monthCalendar,
+  monthLabel,
+  monthStart,
   todayISO,
   weekDays,
   weekLabel,
@@ -60,6 +65,15 @@ export default function ScheduleView({
   );
   const showGroups = hasEmployeeGroups(employeeGroups);
 
+  const [selectedDay, setSelectedDay] = useState(() => todayISO());
+  const [monthOpen, setMonthOpen] = useState(false);
+  const [monthCursor, setMonthCursor] = useState(() => monthStart(todayISO()));
+  const monthCells = useMemo(() => monthCalendar(monthCursor), [monthCursor]);
+
+  useEffect(() => {
+    if (!days.includes(selectedDay)) setSelectedDay(week);
+  }, [days, selectedDay, week]);
+
   const assigned = useMemo(
     () =>
       new Set(
@@ -72,13 +86,13 @@ export default function ScheduleView({
 
   const coverage = useMemo(() => {
     const map = new Map<string, { A: number; B: number }>();
-    for (const date of days) map.set(date, { A: 0, B: 0 });
     for (const item of state.assignments) {
-      const entry = map.get(item.date);
-      if (entry) entry[item.shift] += 1;
+      const entry = map.get(item.date) ?? { A: 0, B: 0 };
+      entry[item.shift] += 1;
+      map.set(item.date, entry);
     }
     return map;
-  }, [state.assignments, days]);
+  }, [state.assignments]);
 
   const previousWeek = useMemo(() => weekDays(addDays(week, -7)), [week]);
   const previousCount = useMemo(
@@ -93,6 +107,33 @@ export default function ScheduleView({
   }).format(new Date());
 
   const employeeCount = state.employees.length;
+  const countsFor = (date: string) => coverage.get(date) ?? { A: 0, B: 0 };
+
+  const goWeek = (delta: number) => {
+    const nextDay = addDays(selectedDay, delta * 7);
+    onWeekChange(addDays(week, delta * 7));
+    setSelectedDay(nextDay);
+    setMonthCursor(monthStart(nextDay));
+  };
+
+  const goToday = () => {
+    const now = todayISO();
+    onWeekChange(weekStart(now));
+    setSelectedDay(now);
+    setMonthCursor(monthStart(now));
+  };
+
+  const selectDay = (date: string, closeMonth = false) => {
+    setSelectedDay(date);
+    if (!days.includes(date)) onWeekChange(weekStart(date));
+    setMonthCursor(monthStart(date));
+    if (closeMonth) setMonthOpen(false);
+  };
+
+  const toggleMonth = () => {
+    if (!monthOpen) setMonthCursor(monthStart(selectedDay));
+    setMonthOpen((open) => !open);
+  };
 
   return (
     <div className="schedule-view">
@@ -103,7 +144,7 @@ export default function ScheduleView({
               type="button"
               className="btn icon"
               aria-label="Semana anterior"
-              onClick={() => onWeekChange(addDays(week, -7))}
+              onClick={() => goWeek(-1)}
             >
               <ArrowLeftIcon className="btn-icon" />
             </button>
@@ -118,7 +159,7 @@ export default function ScheduleView({
               type="button"
               className="btn icon"
               aria-label="Semana seguinte"
-              onClick={() => onWeekChange(addDays(week, 7))}
+              onClick={() => goWeek(1)}
             >
               <ArrowRightIcon className="btn-icon" />
             </button>
@@ -129,7 +170,7 @@ export default function ScheduleView({
               type="button"
               className="btn ghost"
               disabled={currentWeek}
-              onClick={() => onWeekChange(weekStart(today))}
+              onClick={goToday}
             >
               Hoje
             </button>
@@ -208,6 +249,120 @@ export default function ScheduleView({
             </span>
           </div>
 
+          <div className="day-strip-head no-print">
+            <span>Turnos por dia</span>
+            <button
+              type="button"
+              className="btn ghost small month-toggle"
+              aria-expanded={monthOpen}
+              onClick={toggleMonth}
+            >
+              {monthOpen ? "Fechar mês" : "Mês"}
+            </button>
+          </div>
+
+          {monthOpen && (
+            <div className="month-panel no-print">
+              <div className="month-head">
+                <button
+                  type="button"
+                  className="btn icon"
+                  aria-label="Mês anterior"
+                  onClick={() => setMonthCursor(addMonths(monthCursor, -1))}
+                >
+                  <ArrowLeftIcon className="btn-icon" />
+                </button>
+                <div className="month-title">
+                  <span className="month-kicker">Escolhe um dia</span>
+                  <strong>{monthLabel(monthCursor)}</strong>
+                </div>
+                <button
+                  type="button"
+                  className="btn icon"
+                  aria-label="Mês seguinte"
+                  onClick={() => setMonthCursor(addMonths(monthCursor, 1))}
+                >
+                  <ArrowRightIcon className="btn-icon" />
+                </button>
+                <button
+                  type="button"
+                  className="month-close"
+                  aria-label="Fechar calendário"
+                  onClick={() => setMonthOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="month-weekdays" aria-hidden="true">
+                {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map(
+                  (label, index) => (
+                    <span key={`${label}-${index}`}>{label}</span>
+                  ),
+                )}
+              </div>
+
+              <div className="month-grid">
+                {monthCells.map((cell) => {
+                  const counts = countsFor(cell.date);
+                  return (
+                    <button
+                      key={cell.date}
+                      type="button"
+                      className={`month-day${cell.inMonth ? "" : " outside"}${
+                        cell.date === selectedDay ? " is-selected" : ""
+                      }${cell.date === today ? " is-today" : ""}`}
+                      aria-pressed={cell.date === selectedDay}
+                      aria-label={`${weekdayShort(cell.date)} ${dayMonthLong(
+                        cell.date,
+                      )}: ${counts.A} no turno de dia e ${counts.B} no turno de noite`}
+                      onClick={() => selectDay(cell.date, true)}
+                    >
+                      <span className="month-num">
+                        {dayNumber(cell.date)}
+                      </span>
+                      <span className="month-dots" aria-hidden="true">
+                        <i className={counts.A > 0 ? "on" : ""} />
+                        <i className={counts.B > 0 ? "on" : ""} />
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div
+            className="mobile-day-strip no-print"
+            role="group"
+            aria-label="Dias da semana"
+          >
+            {days.map((date) => {
+              const counts = countsFor(date);
+              return (
+                <button
+                  key={date}
+                  type="button"
+                  className={`day-chip${
+                    date === selectedDay ? " is-selected" : ""
+                  }${date === today ? " is-today" : ""}`}
+                  aria-pressed={date === selectedDay}
+                  aria-label={`${weekdayShort(date)} ${dayMonthLong(
+                    date,
+                  )}: ${counts.A} no turno de dia e ${counts.B} no turno de noite`}
+                  onClick={() => selectDay(date)}
+                >
+                  <span className="chip-dow">{weekdayShort(date)}</span>
+                  <span className="chip-num">{dayNumber(date)}</span>
+                  <span className="chip-counts" aria-hidden="true">
+                    <i className={counts.A > 0 ? "on" : ""} />
+                    <i className={counts.B > 0 ? "on" : ""} />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
           <div className="grid-scroll">
             <table className="schedule">
               <caption className="sr-only">
@@ -222,7 +377,9 @@ export default function ScheduleView({
                     <th
                       key={date}
                       scope="col"
-                      className={`day-col${date === today ? " is-today" : ""}`}
+                      className={`day-col${date === today ? " is-today" : ""}${
+                        date !== selectedDay ? " mobile-day-hidden" : ""
+                      }`}
                     >
                       <span className="dow">{weekdayShort(date)}</span>
                       <span className="date-num">{dayMonth(date)}</span>
@@ -262,11 +419,23 @@ export default function ScheduleView({
                             {employee.role && (
                               <span className="emp-role">{employee.role}</span>
                             )}
+                            <span
+                              className={`emp-mobile-total${
+                                over ? " over" : ""
+                              }`}
+                            >
+                              {formatDuration(minutes)}
+                              {employee.contractHours !== null && (
+                                <small> / {employee.contractHours}h</small>
+                              )}
+                            </span>
                           </th>
                           {days.map((date) => (
                             <td
                               key={date}
-                              className={`shift-cell${date === today ? " is-today" : ""}`}
+                              className={`shift-cell${
+                                date === today ? " is-today" : ""
+                              }${date !== selectedDay ? " mobile-day-hidden" : ""}`}
                             >
                               {SHIFT_NAMES.map((name, index) => {
                                 const shift: ShiftKey =
@@ -323,7 +492,12 @@ export default function ScheduleView({
                   {days.map((date) => {
                     const counts = coverage.get(date) ?? { A: 0, B: 0 };
                     return (
-                      <td key={date} className="coverage-cell">
+                      <td
+                        key={date}
+                        className={`coverage-cell${
+                          date !== selectedDay ? " mobile-day-hidden" : ""
+                        }`}
+                      >
                         {([0, 1] as const).map((index) => {
                           const shift: ShiftKey = index === 0 ? "A" : "B";
                           const count = counts[shift];

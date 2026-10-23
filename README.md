@@ -11,6 +11,8 @@ login: abre o site, escolhe a semana e clica nos turnos.
 - Total de horas por colaborador e comparação com o contrato semanal.
 - Avisos automáticos de cobertura mínima, excesso de contrato e turno duplo.
 - Navegação entre semanas e botão para copiar o horário da semana anterior.
+- No telemóvel, o horário fica focado num dia, com um seletor dos sete dias e
+  um calendário mensal para planear o mês completo sem arrastar a tabela.
 - Gestão da equipa: nome, função, horas de contrato e remoção.
 - Turnos e mínimos de cobertura configuráveis.
 - Exportação do horário como imagem no estilo do horário de atendimento do
@@ -153,6 +155,14 @@ lib/
 supabase/
   schema.sql           SQL para criar a tabela no Supabase
 ```
+
+## Versões
+
+Cada publicação é marcada com uma tag Git (`v0.1`, `v0.2`, …) e a versão
+aparece no rodapé do site. A versão atual é **v0.1**.
+
+- **v0.1** — tabela semanal, exportação para WhatsApp, grupos de pizzaiolos e
+  modo móvel focado num dia, com calendário mensal.
 
 ## Comandos
 

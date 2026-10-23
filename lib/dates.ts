@@ -59,6 +59,11 @@ export function weekdayLong(iso: string): string {
   return capitalize(formatted);
 }
 
+/** Número do dia do mês (1–31). */
+export function dayNumber(iso: string): number {
+  return parseISODate(iso).getUTCDate();
+}
+
 export function dayMonth(iso: string): string {
   return new Intl.DateTimeFormat("pt-PT", {
     day: "2-digit",
@@ -95,6 +100,57 @@ export function weekLabel(startISO: string): string {
     return `${start.getUTCDate()} – ${end.getUTCDate()} de ${endMonth} de ${endYear}`;
   }
   return `${start.getUTCDate()} de ${startMonth} – ${end.getUTCDate()} de ${endMonth} de ${endYear}`;
+}
+
+/** Primeiro dia do mês de uma data. */
+export function monthStart(iso: string): string {
+  const date = parseISODate(iso);
+  return toISODate(
+    new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1)),
+  );
+}
+
+/** Muda de mês mantendo o dia 1 (evita saltar meses com menos dias). */
+export function addMonths(iso: string, months: number): string {
+  const date = parseISODate(iso);
+  return toISODate(
+    new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1)),
+  );
+}
+
+export function daysInMonth(iso: string): number {
+  const date = parseISODate(iso);
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+}
+
+/** Ex.: "Outubro de 2026". */
+export function monthLabel(iso: string): string {
+  const formatted = new Intl.DateTimeFormat("pt-PT", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(parseISODate(iso));
+  return capitalize(formatted);
+}
+
+export type MonthCell = {
+  date: string;
+  inMonth: boolean;
+};
+
+/** Semanas completas (35 ou 42 dias) para o calendário, a começar à segunda. */
+export function monthCalendar(iso: string): MonthCell[] {
+  const first = monthStart(iso);
+  const offset = (parseISODate(first).getUTCDay() + 6) % 7;
+  const total = Math.ceil((offset + daysInMonth(first)) / 7) * 7;
+  const start = addDays(first, -offset);
+  const month = first.slice(0, 7);
+  return Array.from({ length: total }, (_, index) => {
+    const date = addDays(start, index);
+    return { date, inMonth: date.slice(0, 7) === month };
+  });
 }
 
 export function isoWeekNumber(iso: string): number {

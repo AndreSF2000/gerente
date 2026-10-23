@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { defaultState } from "@/lib/defaults";
 import { addDays, todayISO, weekDays, weekStart } from "@/lib/dates";
 import { sanitizeState } from "@/lib/sanitize";
+import { APP_VERSION } from "@/lib/version";
 import type {
   Employee,
   ScheduleState,
@@ -547,7 +548,9 @@ export default function ScheduleApp() {
       </main>
 
       <footer className="footer no-print">
-        <span>Mr Pizza · horários da equipa</span>
+        <span>
+          Mr Pizza · horários da equipa · {APP_VERSION}
+        </span>
         <span>Os turnos são guardados automaticamente.</span>
       </footer>
 
