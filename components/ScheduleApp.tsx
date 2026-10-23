@@ -117,6 +117,28 @@ export default function ScheduleApp() {
   const exportButtonRef = useRef<HTMLButtonElement>(null);
   const dirtyRef = useRef(false);
 
+  // Evita o zoom por pinça no iPhone, que desalinha a tabela e os botões.
+  useEffect(() => {
+    const preventGesture = (event: Event) => event.preventDefault();
+    const preventMultiTouch = (event: TouchEvent) => {
+      if (event.touches.length > 1) event.preventDefault();
+    };
+
+    document.addEventListener("gesturestart", preventGesture);
+    document.addEventListener("gesturechange", preventGesture);
+    document.addEventListener("gestureend", preventGesture);
+    document.addEventListener("touchmove", preventMultiTouch, {
+      passive: false,
+    });
+
+    return () => {
+      document.removeEventListener("gesturestart", preventGesture);
+      document.removeEventListener("gesturechange", preventGesture);
+      document.removeEventListener("gestureend", preventGesture);
+      document.removeEventListener("touchmove", preventMultiTouch);
+    };
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 

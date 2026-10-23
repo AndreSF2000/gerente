@@ -20,6 +20,12 @@
   --radius: 16px;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: pan-x pan-y;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -38,6 +44,7 @@ body {
     var(--bg);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  touch-action: pan-x pan-y;
   text-rendering: optimizeLegibility;
 }
 
@@ -1860,6 +1867,12 @@ code {
 }
 
 @media (max-width: 720px) {
+  /* 16px evita o zoom automático do Safari ao tocar num campo. */
+  .input,
+  .cell-input {
+    font-size: 16px;
+  }
+
   .topbar {
     padding: 16px 0 12px;
   }

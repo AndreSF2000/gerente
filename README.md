@@ -16,6 +16,8 @@ login: abre o site, escolhe a semana e clica nos turnos.
 - Navegação entre semanas e botão para copiar o horário da semana anterior.
 - No telemóvel, o horário fica focado num dia, com um seletor dos sete dias e
   um calendário mensal para planear o mês completo sem arrastar a tabela.
+- No iPhone instalado, o zoom por pinça e o zoom automático ao tocar nos campos
+  estão desativados, para o horário não desalinhar.
 - Gestão da equipa: nome, função, horas de contrato e remoção.
 - Turnos e mínimos de cobertura configuráveis. O mínimo da equipa não conta
   com os pizzaiolos, que têm um mínimo próprio em cada turno; a quantidade é
@@ -136,6 +138,9 @@ inteiro, sem a barra de endereço do Safari. Como os dados estão no Supabase, a
 app precisa de internet; não é uma versão offline. Quando o site é atualizado,
 basta voltar a abrir a app para receber a versão nova.
 
+A app está configurada para não permitir o zoom por pinça nem o zoom automático
+ao tocar nos campos, mantendo o horário alinhado no telemóvel.
+
 ## Dados, backup e segurança
 
 - Todos os dados são guardados numa única linha JSON na tabela
@@ -185,8 +190,10 @@ supabase/
 ## Versões
 
 Cada publicação é marcada com uma tag Git (`v0.1`, `v0.2`, …) e a versão
-aparece no rodapé do site. A versão atual é **v0.7**.
+aparece no rodapé do site. A versão atual é **v0.8**.
 
+- **v0.8** — zoom por pinça e zoom automático dos campos desativados no iPhone,
+  para o horário não desalinhar.
 - **v0.7** — o botão de exportação do mês na partilha por WhatsApp passa a
   chamar-se apenas **Mês**.
 - **v0.6** — o mínimo de cobertura da equipa passa a excluir os pizzaiolos; os
