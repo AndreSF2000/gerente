@@ -33,15 +33,15 @@ type Props = {
 };
 
 type DayCoverage = {
-  A: number;
-  B: number;
+  teamA: number;
+  teamB: number;
   pizzaiolosA: number;
   pizzaiolosB: number;
 };
 
 const EMPTY_COVERAGE: DayCoverage = {
-  A: 0,
-  B: 0,
+  teamA: 0,
+  teamB: 0,
   pizzaiolosA: 0,
   pizzaiolosB: 0,
 };
@@ -64,11 +64,14 @@ export default function OverviewView({
     const byId = new Map(state.employees.map((employee) => [employee.id, employee]));
     for (const item of state.assignments) {
       const entry = map.get(item.date) ?? { ...EMPTY_COVERAGE };
-      entry[item.shift] += 1;
       const employee = byId.get(item.employeeId);
       if (employee && isPizzaiolo(employee)) {
         if (item.shift === "A") entry.pizzaiolosA += 1;
         else entry.pizzaiolosB += 1;
+      } else if (item.shift === "A") {
+        entry.teamA += 1;
+      } else {
+        entry.teamB += 1;
       }
       map.set(item.date, entry);
     }
@@ -79,7 +82,7 @@ export default function OverviewView({
 
   const todayShifts = ([0, 1] as const).map((index) => {
     const shift: ShiftKey = index === 0 ? "A" : "B";
-    const count = shift === "A" ? todayCoverage.A : todayCoverage.B;
+    const count = shift === "A" ? todayCoverage.teamA : todayCoverage.teamB;
     const pizzaiolos =
       shift === "A" ? todayCoverage.pizzaiolosA : todayCoverage.pizzaiolosB;
     const minimum = state.settings.minStaff[index];
@@ -110,9 +113,9 @@ export default function OverviewView({
     const counts = coverage.get(date) ?? EMPTY_COVERAGE;
     const staffLow =
       (state.settings.minStaff[0] > 0 &&
-        counts.A < state.settings.minStaff[0]) ||
+        counts.teamA < state.settings.minStaff[0]) ||
       (state.settings.minStaff[1] > 0 &&
-        counts.B < state.settings.minStaff[1]);
+        counts.teamB < state.settings.minStaff[1]);
     const pizzaiolosLow =
       (state.settings.minPizzaiolo[0] > 0 &&
         counts.pizzaiolosA < state.settings.minPizzaiolo[0]) ||
@@ -124,7 +127,12 @@ export default function OverviewView({
       staffLow,
       pizzaiolosLow,
       low: staffLow || pizzaiolosLow,
-      empty: counts.A + counts.B === 0,
+      empty:
+        counts.teamA +
+          counts.teamB +
+          counts.pizzaiolosA +
+          counts.pizzaiolosB ===
+        0,
     };
   });
 
@@ -237,7 +245,10 @@ export default function OverviewView({
                     </div>
 
                     <div className="today-foot">
-                      <span className="today-metric">
+                      <span
+                        className="today-metric"
+                        title="Equipa sem contar com os pizzaiolos"
+                      >
                         Equipa
                         <b className={shift.staffLow ? "low" : "ok"}>
                           {shift.minimum > 0
@@ -343,9 +354,11 @@ export default function OverviewView({
                     }${isWeekendDay(row.date) ? " is-weekend" : ""}`}
                     aria-label={`${weekdayLong(row.date)}, ${dayMonthLong(
                       row.date,
-                    )}: ${row.counts.A} no turno de dia, ${
-                      row.counts.B
-                    } no turno de noite`}
+                    )}: equipa ${row.counts.teamA} de dia, ${
+                      row.counts.teamB
+                    } de noite; pizzaiolos ${
+                      row.counts.pizzaiolosA
+                    } de dia, ${row.counts.pizzaiolosB} de noite`}
                     onClick={() => onOpenDay(row.date)}
                   >
                     <span className="ov-week-day">
@@ -358,22 +371,22 @@ export default function OverviewView({
                         <span
                           className={`ov-count${
                             state.settings.minStaff[0] > 0 &&
-                            row.counts.A < state.settings.minStaff[0]
+                            row.counts.teamA < state.settings.minStaff[0]
                               ? " low"
                               : ""
                           }`}
                         >
-                          <b>{row.counts.A}</b> dia
+                          <b>{row.counts.teamA}</b> dia
                         </span>
                         <span
                           className={`ov-count${
                             state.settings.minStaff[1] > 0 &&
-                            row.counts.B < state.settings.minStaff[1]
+                            row.counts.teamB < state.settings.minStaff[1]
                               ? " low"
                               : ""
                           }`}
                         >
-                          <b>{row.counts.B}</b> noite
+                          <b>{row.counts.teamB}</b> noite
                         </span>
                       </span>
                       <span

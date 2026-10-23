@@ -11,14 +11,15 @@ login: abre o site, escolhe a semana e clica nos turnos.
 - Horário próprio de fim de semana: sexta e sábado.
 - Atribuição de turnos com um clique e remoção imediata.
 - Total de horas por colaborador e comparação com o contrato semanal.
-- Avisos automáticos de cobertura mínima da equipa e dos pizzaiolos, excesso
-  de contrato e turno duplo.
+- Avisos automáticos de cobertura mínima da equipa (sem pizzaiolos) e dos
+  pizzaiolos, excesso de contrato e turno duplo.
 - Navegação entre semanas e botão para copiar o horário da semana anterior.
 - No telemóvel, o horário fica focado num dia, com um seletor dos sete dias e
   um calendário mensal para planear o mês completo sem arrastar a tabela.
 - Gestão da equipa: nome, função, horas de contrato e remoção.
-- Turnos e mínimos de cobertura configuráveis, com um mínimo próprio para os
-  pizzaiolos em cada turno e escolha da quantidade numa lista.
+- Turnos e mínimos de cobertura configuráveis. O mínimo da equipa não conta
+  com os pizzaiolos, que têm um mínimo próprio em cada turno; a quantidade é
+  escolhida numa lista.
 - Exportação do horário como imagem no estilo do horário de atendimento do
   Mr Pizza, pronta para enviar no WhatsApp (semana, 4 semanas ou mês completo).
 - Os pizzaiolos aparecem num grupo próprio, separados dos restantes
@@ -168,7 +169,7 @@ components/
   OverviewView.tsx     Painel inicial com o resumo da equipa e da semana
   ScheduleView.tsx     Grelha semanal, totais e avisos
   TeamView.tsx         Gestão da equipa
-  SettingsView.tsx     Turnos, cobertura mínima (equipa e pizzaiolos) e backup
+  SettingsView.tsx     Turnos, cobertura (equipa sem pizzaiolos e pizzaiolos) e backup
   WhatsAppExport.tsx   Pré-visualização e partilha por WhatsApp (semana, 4 semanas ou mês)
 lib/
   dates.ts             Datas e formatação em português
@@ -184,8 +185,10 @@ supabase/
 ## Versões
 
 Cada publicação é marcada com uma tag Git (`v0.1`, `v0.2`, …) e a versão
-aparece no rodapé do site. A versão atual é **v0.5**.
+aparece no rodapé do site. A versão atual é **v0.6**.
 
+- **v0.6** — o mínimo de cobertura da equipa passa a excluir os pizzaiolos; os
+  dois mínimos são independentes.
 - **v0.5** — opção **Mês completo** na partilha por WhatsApp, com a imagem e a
   legenda do mês inteiro.
 - **v0.4** — painel Resumo ao abrir o site, com os turnos de hoje, a cobertura

@@ -126,14 +126,18 @@ export function buildWeekWarnings(
     for (const shift of SHIFT_KEYS) {
       const index = shift === "A" ? 0 : 1;
       const minimum = state.settings.minStaff[index];
-      const count = dayAssignments.filter((item) => item.shift === shift).length;
+      const count = dayAssignments.filter((item) => {
+        if (item.shift !== shift) return false;
+        const employee = employeeById.get(item.employeeId);
+        return employee ? !isPizzaiolo(employee) : false;
+      }).length;
       if (minimum > 0 && count < minimum) {
         warnings.push({
           id: `coverage-${date}-${shift}`,
           kind: "coverage",
-          message: `${weekdayLong(date)}, ${dayMonthLong(date)} · ${SHIFT_NAMES[index]}: ${
-            count === 1 ? "1 pessoa" : `${count} pessoas`
-          } (mínimo ${minimum}).`,
+          message: `${weekdayLong(date)}, ${dayMonthLong(date)} · Equipa (${
+            SHIFT_NAMES[index]
+          }): ${count === 1 ? "1 pessoa" : `${count} pessoas`} (mínimo ${minimum}, sem pizzaiolos).`,
         });
       }
 

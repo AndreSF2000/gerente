@@ -102,6 +102,21 @@ export default function ScheduleView({
     return map;
   }, [state.assignments]);
 
+  const teamCoverage = useMemo(() => {
+    const map = new Map<string, { A: number; B: number }>();
+    const byId = new Map(
+      state.employees.map((employee) => [employee.id, employee]),
+    );
+    for (const item of state.assignments) {
+      const employee = byId.get(item.employeeId);
+      if (employee && isPizzaiolo(employee)) continue;
+      const entry = map.get(item.date) ?? { A: 0, B: 0 };
+      entry[item.shift] += 1;
+      map.set(item.date, entry);
+    }
+    return map;
+  }, [state.assignments, state.employees]);
+
   const pizzaioloCoverage = useMemo(() => {
     const map = new Map<string, { A: number; B: number }>();
     const byId = new Map(state.employees.map((employee) => [employee.id, employee]));
@@ -508,10 +523,10 @@ export default function ScheduleView({
               <tfoot>
                 <tr>
                   <th scope="row" className="emp-col coverage-label">
-                    Cobertura
+                    Equipa
                   </th>
                   {days.map((date) => {
-                    const counts = coverage.get(date) ?? { A: 0, B: 0 };
+                    const counts = teamCoverage.get(date) ?? { A: 0, B: 0 };
                     return (
                       <td
                         key={date}
@@ -528,9 +543,11 @@ export default function ScheduleView({
                             <span
                               key={shift}
                               className={`cov${low ? " low" : ""}`}
-                              title={`${SHIFT_NAMES[index]}: ${count} ${
+                              title={`Equipa no turno de ${SHIFT_NAMES[
+                                index
+                              ].toLowerCase()}: ${count} ${
                                 count === 1 ? "pessoa" : "pessoas"
-                              } (mínimo ${minimum})`}
+                              } (mínimo ${minimum}, sem pizzaiolos)`}
                             >
                               <b>{count}</b>
                               {shift}

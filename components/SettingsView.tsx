@@ -227,14 +227,17 @@ export default function SettingsView({
           <div>
             <h2 className="section-title">Cobertura mínima</h2>
             <p className="section-desc">
-              Quantas pessoas queres ter, no mínimo, em cada turno. Abaixo
-              deste número aparece um aviso no horário. O mínimo de pizzaiolos
-              é contado à parte, dentro do total da equipa.
+              Quantas pessoas da equipa queres ter, no mínimo, em cada turno,
+              sem contar com os pizzaiolos. Abaixo deste número aparece um aviso
+              no horário. O mínimo dos pizzaiolos é verificado à parte.
             </p>
           </div>
         </div>
         <div className="min-grid">
-          <div className="min-group-label">Equipa (todas as funções)</div>
+          <div className="min-group-label">
+            Equipa (sem pizzaiolos)
+            <span>Os pizzaiolos contam no mínimo próprio abaixo.</span>
+          </div>
           {SHIFT_NAMES.map((name, index) => (
             <div className="min-row" key={`staff-${name}`}>
               <span className="shift-label">
