@@ -65,6 +65,33 @@ function TimeInput({
   );
 }
 
+const MINIMUM_OPTIONS = Array.from({ length: 51 }, (_, index) => index);
+
+function MinimumSelect({
+  value,
+  label,
+  onChange,
+}: {
+  value: number;
+  label: string;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <select
+      className="input min-input min-select"
+      value={value}
+      aria-label={label}
+      onChange={(event) => onChange(Number(event.target.value))}
+    >
+      {MINIMUM_OPTIONS.map((option) => (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 function formatMoment(iso: string | null): string {
   if (!iso) return "—";
   return new Intl.DateTimeFormat("pt-PT", {
@@ -94,13 +121,16 @@ export default function SettingsView({
     onChangeSettings({ ...settings, [group]: pair });
   };
 
-  const updateMinimum = (index: number, raw: string) => {
-    const value = Number(raw);
-    const minStaff = [...settings.minStaff] as [number, number];
-    minStaff[index] = Number.isFinite(value)
-      ? Math.min(50, Math.max(0, Math.round(value)))
-      : 0;
-    onChangeSettings({ ...settings, minStaff });
+  const updateMinimum = (
+    key: "minStaff" | "minPizzaiolo",
+    index: number,
+    value: number,
+  ) => {
+    const next = { ...settings };
+    const pair = [...next[key]] as [number, number];
+    pair[index] = Math.min(50, Math.max(0, Math.round(value)));
+    next[key] = pair;
+    onChangeSettings(next);
   };
 
   const groups = [
@@ -198,28 +228,49 @@ export default function SettingsView({
             <h2 className="section-title">Cobertura mínima</h2>
             <p className="section-desc">
               Quantas pessoas queres ter, no mínimo, em cada turno. Abaixo
-              deste número aparece um aviso no horário.
+              deste número aparece um aviso no horário. O mínimo de pizzaiolos
+              é contado à parte, dentro do total da equipa.
             </p>
           </div>
         </div>
         <div className="min-grid">
+          <div className="min-group-label">Equipa (todas as funções)</div>
           {SHIFT_NAMES.map((name, index) => (
-            <div className="min-row" key={name}>
+            <div className="min-row" key={`staff-${name}`}>
               <span className="shift-label">
                 <b>{name}</b>
               </span>
-              <input
-                type="number"
-                className="input min-input"
-                min={0}
-                max={50}
-                step={1}
+              <MinimumSelect
                 value={settings.minStaff[index]}
-                onChange={(event) => updateMinimum(index, event.target.value)}
-                aria-label={`Mínimo de pessoas no turno de ${name.toLowerCase()}`}
+                label={`Mínimo de pessoas no turno de ${name.toLowerCase()}`}
+                onChange={(value) => updateMinimum("minStaff", index, value)}
               />
               <span className="unit">
                 {settings.minStaff[index] === 1 ? "pessoa" : "pessoas"}
+              </span>
+            </div>
+          ))}
+
+          <div className="min-group-label">
+            Pizzaiolos
+            <span>Normalmente 1 de dia e 1 de noite.</span>
+          </div>
+          {SHIFT_NAMES.map((name, index) => (
+            <div className="min-row" key={`pizzaiolo-${name}`}>
+              <span className="shift-label">
+                <b>{name}</b>
+              </span>
+              <MinimumSelect
+                value={settings.minPizzaiolo[index]}
+                label={`Mínimo de pizzaiolos no turno de ${name.toLowerCase()}`}
+                onChange={(value) =>
+                  updateMinimum("minPizzaiolo", index, value)
+                }
+              />
+              <span className="unit">
+                {settings.minPizzaiolo[index] === 1
+                  ? "pizzaiolo"
+                  : "pizzaiolos"}
               </span>
             </div>
           ))}

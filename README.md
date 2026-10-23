@@ -9,12 +9,14 @@ login: abre o site, escolhe a semana e clica nos turnos.
 - Horário próprio de fim de semana: sexta e sábado.
 - Atribuição de turnos com um clique e remoção imediata.
 - Total de horas por colaborador e comparação com o contrato semanal.
-- Avisos automáticos de cobertura mínima, excesso de contrato e turno duplo.
+- Avisos automáticos de cobertura mínima da equipa e dos pizzaiolos, excesso
+  de contrato e turno duplo.
 - Navegação entre semanas e botão para copiar o horário da semana anterior.
 - No telemóvel, o horário fica focado num dia, com um seletor dos sete dias e
   um calendário mensal para planear o mês completo sem arrastar a tabela.
 - Gestão da equipa: nome, função, horas de contrato e remoção.
-- Turnos e mínimos de cobertura configuráveis.
+- Turnos e mínimos de cobertura configuráveis, com um mínimo próprio para os
+  pizzaiolos em cada turno e escolha da quantidade numa lista.
 - Exportação do horário como imagem no estilo do horário de atendimento do
   Mr Pizza, pronta para enviar no WhatsApp (semana ou 4 semanas).
 - Os pizzaiolos aparecem num grupo próprio, separados dos restantes
@@ -143,7 +145,7 @@ components/
   ScheduleApp.tsx      Estado, gravação automática e abas
   ScheduleView.tsx     Grelha semanal, totais e avisos
   TeamView.tsx         Gestão da equipa
-  SettingsView.tsx     Turnos, cobertura mínima e backup
+  SettingsView.tsx     Turnos, cobertura mínima (equipa e pizzaiolos) e backup
   WhatsAppExport.tsx   Pré-visualização e partilha do horário por WhatsApp
 lib/
   dates.ts             Datas e formatação em português
@@ -159,8 +161,10 @@ supabase/
 ## Versões
 
 Cada publicação é marcada com uma tag Git (`v0.1`, `v0.2`, …) e a versão
-aparece no rodapé do site. A versão atual é **v0.1**.
+aparece no rodapé do site. A versão atual é **v0.2**.
 
+- **v0.2** — mínimo de pizzaiolos separado do resto da equipa em cada turno,
+  escolhido numa lista, com avisos e linha de cobertura próprios.
 - **v0.1** — tabela semanal, exportação para WhatsApp, grupos de pizzaiolos e
   modo móvel focado num dia, com calendário mensal.
 

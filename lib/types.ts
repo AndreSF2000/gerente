@@ -14,6 +14,8 @@ export type Settings = {
   weekend: [ShiftTime, ShiftTime];
   /** Pessoas mínimas por turno: [dia, noite]. */
   minStaff: [number, number];
+  /** Pizzaiolos mínimos por turno: [dia, noite]. */
+  minPizzaiolo: [number, number];
 };
 
 export type Employee = {

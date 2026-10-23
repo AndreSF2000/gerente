@@ -1278,6 +1278,45 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+.min-select {
+  width: 80px;
+  min-height: 40px;
+  padding-right: 4px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.min-group-label {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--ink-soft);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.min-group-label + .min-row {
+  margin-top: -2px;
+}
+
+.min-group-label:not(:first-child) {
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+}
+
+.min-group-label span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .data-body {
   padding: 0 20px 20px;
 }

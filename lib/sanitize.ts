@@ -36,6 +36,15 @@ function readShiftPair(value: unknown): [ShiftTime, ShiftTime] | null {
   return [first, second];
 }
 
+function readMinimumPair(value: unknown): [number, number] | null {
+  if (!Array.isArray(value) || value.length !== 2) return null;
+  const pair = value.map((item) => Number(item));
+  if (!pair.every((item) => Number.isInteger(item) && item >= 0 && item <= 50)) {
+    return null;
+  }
+  return [pair[0], pair[1]];
+}
+
 function readSettings(value: unknown): Settings | null {
   const record = asRecord(value);
   if (!record) return null;
@@ -43,17 +52,16 @@ function readSettings(value: unknown): Settings | null {
   const weekend = readShiftPair(record.weekend);
   if (!weekday || !weekend) return null;
 
-  const minStaffRaw = record.minStaff;
-  if (!Array.isArray(minStaffRaw) || minStaffRaw.length !== 2) return null;
-  const minStaff = minStaffRaw.map((item) => Number(item));
-  if (!minStaff.every((item) => Number.isInteger(item) && item >= 0 && item <= 50)) {
-    return null;
-  }
+  const minStaff = readMinimumPair(record.minStaff);
+  if (!minStaff) return null;
+  // Dados antigos não têm este campo: nesse caso fica o mínimo habitual.
+  const minPizzaiolo = readMinimumPair(record.minPizzaiolo) ?? [1, 1];
 
   return {
     weekday,
     weekend,
-    minStaff: [minStaff[0], minStaff[1]],
+    minStaff,
+    minPizzaiolo,
   };
 }
 

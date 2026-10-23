@@ -27,7 +27,11 @@ import {
   shiftTimeLabel,
   weekTotals,
 } from "@/lib/schedule";
-import { groupEmployees, hasEmployeeGroups } from "@/lib/team-groups";
+import {
+  groupEmployees,
+  hasEmployeeGroups,
+  isPizzaiolo,
+} from "@/lib/team-groups";
 import type { ScheduleState, ShiftKey } from "@/lib/types";
 import {
   ArrowLeftIcon,
@@ -93,6 +97,19 @@ export default function ScheduleView({
     }
     return map;
   }, [state.assignments]);
+
+  const pizzaioloCoverage = useMemo(() => {
+    const map = new Map<string, { A: number; B: number }>();
+    const byId = new Map(state.employees.map((employee) => [employee.id, employee]));
+    for (const item of state.assignments) {
+      const employee = byId.get(item.employeeId);
+      if (!employee || !isPizzaiolo(employee)) continue;
+      const entry = map.get(item.date) ?? { A: 0, B: 0 };
+      entry[item.shift] += 1;
+      map.set(item.date, entry);
+    }
+    return map;
+  }, [state.assignments, state.employees]);
 
   const previousWeek = useMemo(() => weekDays(addDays(week, -7)), [week]);
   const previousCount = useMemo(
@@ -526,6 +543,45 @@ export default function ScheduleView({
                     <span className="total-contract">equipa</span>
                   </td>
                 </tr>
+                <tr>
+                  <th scope="row" className="emp-col coverage-label">
+                    Pizzaiolos
+                  </th>
+                  {days.map((date) => {
+                    const counts = pizzaioloCoverage.get(date) ?? {
+                      A: 0,
+                      B: 0,
+                    };
+                    return (
+                      <td
+                        key={date}
+                        className={`coverage-cell${
+                          date !== selectedDay ? " mobile-day-hidden" : ""
+                        }`}
+                      >
+                        {([0, 1] as const).map((index) => {
+                          const shift: ShiftKey = index === 0 ? "A" : "B";
+                          const count = counts[shift];
+                          const minimum = state.settings.minPizzaiolo[index];
+                          const low = count < minimum;
+                          return (
+                            <span
+                              key={shift}
+                              className={`cov${low ? " low" : ""}`}
+                              title={`Pizzaiolos no turno de ${SHIFT_NAMES[
+                                index
+                              ].toLowerCase()}: ${count} (mínimo ${minimum})`}
+                            >
+                              <b>{count}</b>
+                              {shift}
+                            </span>
+                          );
+                        })}
+                      </td>
+                    );
+                  })}
+                  <td className="total-cell coverage-total" />
+                </tr>
               </tfoot>
             </table>
           </div>
@@ -548,7 +604,7 @@ export default function ScheduleView({
             ))}
           </ul>
           <p className="warn-foot">
-            Podes ajustar o mínimo por turno nas definições.
+            Podes ajustar os mínimos da equipa e dos pizzaiolos nas definições.
           </p>
         </section>
       )}

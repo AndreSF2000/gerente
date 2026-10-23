@@ -6,6 +6,7 @@ import {
   weekDays,
   weekdayLong,
 } from "./dates";
+import { isPizzaiolo } from "./team-groups";
 import type {
   Assignment,
   ScheduleState,
@@ -109,6 +110,9 @@ export function buildWeekWarnings(
   const days = weekDays(weekStartISO);
   const daySet = new Set(days);
   const assignmentsByDate = new Map<string, Assignment[]>();
+  const employeeById = new Map(
+    state.employees.map((employee) => [employee.id, employee]),
+  );
 
   for (const assignment of state.assignments) {
     if (!daySet.has(assignment.date)) continue;
@@ -122,15 +126,31 @@ export function buildWeekWarnings(
     for (const shift of SHIFT_KEYS) {
       const index = shift === "A" ? 0 : 1;
       const minimum = state.settings.minStaff[index];
-      if (!minimum) continue;
       const count = dayAssignments.filter((item) => item.shift === shift).length;
-      if (count < minimum) {
+      if (minimum > 0 && count < minimum) {
         warnings.push({
           id: `coverage-${date}-${shift}`,
           kind: "coverage",
           message: `${weekdayLong(date)}, ${dayMonthLong(date)} · ${SHIFT_NAMES[index]}: ${
             count === 1 ? "1 pessoa" : `${count} pessoas`
           } (mínimo ${minimum}).`,
+        });
+      }
+
+      const pizzaioloMinimum = state.settings.minPizzaiolo[index];
+      if (!pizzaioloMinimum) continue;
+      const pizzaioloCount = dayAssignments.filter((item) => {
+        if (item.shift !== shift) return false;
+        const employee = employeeById.get(item.employeeId);
+        return employee ? isPizzaiolo(employee) : false;
+      }).length;
+      if (pizzaioloCount < pizzaioloMinimum) {
+        warnings.push({
+          id: `pizzaiolo-${date}-${shift}`,
+          kind: "coverage",
+          message: `${weekdayLong(date)}, ${dayMonthLong(date)} · Pizzaiolos (${SHIFT_NAMES[index]}): ${
+            pizzaioloCount === 1 ? "1 pizzaiolo" : `${pizzaioloCount} pizzaiolos`
+          } (mínimo ${pizzaioloMinimum}).`,
         });
       }
     }

@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS: Settings = {
     { start: "19:00", end: "02:00" },
   ],
   minStaff: [2, 2],
+  minPizzaiolo: [1, 1],
 };
 
 export const SHIFT_NAMES = ["Dia", "Noite"] as const;
