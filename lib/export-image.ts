@@ -1,9 +1,17 @@
 import { SHIFT_NAMES } from "./defaults";
-import { addDays, parseISODate, weekLabel, weekdayShort } from "./dates";
+import {
+  addDays,
+  daysInMonth,
+  monthLabel,
+  monthStart,
+  parseISODate,
+  weekLabel,
+  weekdayShort,
+} from "./dates";
 import { groupEmployees, hasEmployeeGroups } from "./team-groups";
 import type { ScheduleState, ShiftKey } from "./types";
 
-export type ExportRange = 7 | 28;
+export type ExportRange = "week" | "fourWeeks" | "month";
 
 type DrawableCanvas = {
   width: number;
@@ -50,6 +58,17 @@ export function exportDateRange(startDate: string, dayCount: number): string[] {
   );
 }
 
+/** Primeiro dia do período. No mês completo, usa o mês da quinta-feira da semana. */
+export function exportRangeStart(week: string, range: ExportRange): string {
+  return range === "month" ? monthStart(addDays(week, 3)) : week;
+}
+
+export function exportRangeDays(week: string, range: ExportRange): number {
+  if (range === "week") return 7;
+  if (range === "fourWeeks") return 28;
+  return daysInMonth(exportRangeStart(week, range));
+}
+
 /** Ex.: "19/10 – 25/10/2026". */
 export function exportRangeShort(startDate: string, dayCount: number): string {
   const start = parseISODate(startDate);
@@ -62,32 +81,37 @@ export function exportRangeShort(startDate: string, dayCount: number): string {
   return `${startLabel}/${start.getUTCFullYear()} – ${endLabel}/${end.getUTCFullYear()}`;
 }
 
-export function exportRangeLabel(startDate: string, dayCount: number): string {
-  if (dayCount === 7) return weekLabel(startDate);
+export function exportRangeLabel(week: string, range: ExportRange): string {
+  if (range === "week") return weekLabel(week);
+  const start = exportRangeStart(week, range);
+  if (range === "month") return monthLabel(start);
   const formatter = new Intl.DateTimeFormat("pt-PT", {
     day: "numeric",
     month: "long",
     year: "numeric",
     timeZone: "UTC",
   });
-  return `${formatter.format(parseISODate(startDate))} – ${formatter.format(
-    parseISODate(addDays(startDate, dayCount - 1)),
+  return `${formatter.format(parseISODate(start))} – ${formatter.format(
+    parseISODate(addDays(start, exportRangeDays(week, range) - 1)),
   )}`;
 }
 
-export function exportFileBase(startDate: string, dayCount: number): string {
-  return `mr-pizza-horario-${startDate}${dayCount === 28 ? "-4-semanas" : ""}`;
+export function exportFileBase(week: string, range: ExportRange): string {
+  const start = exportRangeStart(week, range);
+  const suffix =
+    range === "fourWeeks" ? "-4-semanas" : range === "month" ? "-mes" : "";
+  return `mr-pizza-horario-${start}${suffix}`;
 }
 
 export function buildShareCaption(
   state: ScheduleState,
-  startDate: string,
-  dayCount: number,
+  week: string,
+  range: ExportRange,
 ): string {
   const { weekday, weekend } = state.settings;
   return [
     "MR PIZZA · HORÁRIO DE ATENDIMENTO",
-    exportRangeLabel(startDate, dayCount),
+    exportRangeLabel(week, range),
     "",
     `${SHIFT_NAMES[0]}: ${weekday[0].start}–${weekday[0].end} (seg–qui e dom) · ${weekend[0].start}–${weekend[0].end} (sex e sáb)`,
     `${SHIFT_NAMES[1]}: ${weekday[1].start}–${weekday[1].end} (seg–qui e dom) · ${weekend[1].start}–${weekend[1].end} (sex e sáb)`,
@@ -122,9 +146,11 @@ function fittedText(
 export function drawScheduleImage(
   canvas: DrawableCanvas,
   state: ScheduleState,
-  startDate: string,
-  dayCount: number,
+  week: string,
+  range: ExportRange,
 ): void {
+  const startDate = exportRangeStart(week, range);
+  const dayCount = exportRangeDays(week, range);
   const employeeGroups = groupEmployees(state.employees);
   const showGroups = hasEmployeeGroups(employeeGroups);
   const employees = employeeGroups.flatMap((group) => group.employees);

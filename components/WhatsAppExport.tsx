@@ -18,7 +18,7 @@ type Props = {
 };
 
 export default function WhatsAppExport({ state, week, onClose }: Props) {
-  const [range, setRange] = useState<ExportRange>(7);
+  const [range, setRange] = useState<ExportRange>("week");
   const [file, setFile] = useState<File | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
@@ -156,18 +156,26 @@ export default function WhatsAppExport({ state, week, onClose }: Props) {
             <button
               type="button"
               className="range-tab"
-              aria-pressed={range === 7}
-              onClick={() => setRange(7)}
+              aria-pressed={range === "week"}
+              onClick={() => setRange("week")}
             >
               Esta semana
             </button>
             <button
               type="button"
               className="range-tab"
-              aria-pressed={range === 28}
-              onClick={() => setRange(28)}
+              aria-pressed={range === "fourWeeks"}
+              onClick={() => setRange("fourWeeks")}
             >
               4 semanas
+            </button>
+            <button
+              type="button"
+              className="range-tab"
+              aria-pressed={range === "month"}
+              onClick={() => setRange("month")}
+            >
+              Mês completo
             </button>
           </div>
           <span className="range-summary">

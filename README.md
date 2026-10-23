@@ -20,7 +20,7 @@ login: abre o site, escolhe a semana e clica nos turnos.
 - Turnos e mínimos de cobertura configuráveis, com um mínimo próprio para os
   pizzaiolos em cada turno e escolha da quantidade numa lista.
 - Exportação do horário como imagem no estilo do horário de atendimento do
-  Mr Pizza, pronta para enviar no WhatsApp (semana ou 4 semanas).
+  Mr Pizza, pronta para enviar no WhatsApp (semana, 4 semanas ou mês completo).
 - Os pizzaiolos aparecem num grupo próprio, separados dos restantes
   colaboradores, tanto no horário como na imagem exportada. Basta a função
   conter “Pizzaiolo” (ou “Pizzaiola”).
@@ -169,7 +169,7 @@ components/
   ScheduleView.tsx     Grelha semanal, totais e avisos
   TeamView.tsx         Gestão da equipa
   SettingsView.tsx     Turnos, cobertura mínima (equipa e pizzaiolos) e backup
-  WhatsAppExport.tsx   Pré-visualização e partilha do horário por WhatsApp
+  WhatsAppExport.tsx   Pré-visualização e partilha por WhatsApp (semana, 4 semanas ou mês)
 lib/
   dates.ts             Datas e formatação em português
   export-image.ts      Desenho da imagem do horário para WhatsApp
@@ -184,8 +184,10 @@ supabase/
 ## Versões
 
 Cada publicação é marcada com uma tag Git (`v0.1`, `v0.2`, …) e a versão
-aparece no rodapé do site. A versão atual é **v0.4**.
+aparece no rodapé do site. A versão atual é **v0.5**.
 
+- **v0.5** — opção **Mês completo** na partilha por WhatsApp, com a imagem e a
+  legenda do mês inteiro.
 - **v0.4** — painel Resumo ao abrir o site, com os turnos de hoje, a cobertura
   diária, os avisos e atalhos para cada dia da semana.
 - **v0.3** — instalação no iPhone como app no ecrã principal, com ícone
