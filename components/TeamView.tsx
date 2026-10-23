@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ROLE_SUGGESTIONS } from "@/lib/defaults";
 import { employeeWeekMinutes, formatDuration } from "@/lib/schedule";
 import type { Employee, ScheduleState } from "@/lib/types";
@@ -13,6 +13,79 @@ type Props = {
   onUpdate: (id: string, patch: Partial<Employee>) => void;
   onRemove: (id: string) => void;
 };
+
+const CUSTOM_ROLE = "__custom__";
+
+/** Sugestões fixas mais as funções que já existem na equipa. */
+function roleChoices(employees: Employee[], current = ""): string[] {
+  const values = new Set<string>(ROLE_SUGGESTIONS);
+  for (const employee of employees) {
+    const role = employee.role.trim();
+    if (role) values.add(role);
+  }
+  if (current.trim()) values.add(current.trim());
+  return Array.from(values);
+}
+
+function RoleCell({
+  employee,
+  employees,
+  onUpdate,
+}: {
+  employee: Employee;
+  employees: Employee[];
+  onUpdate: (id: string, patch: Partial<Employee>) => void;
+}) {
+  const [custom, setCustom] = useState(false);
+  const choices = useMemo(
+    () => roleChoices(employees, employee.role),
+    [employees, employee.role],
+  );
+
+  return (
+    <div className="role-cell">
+      <label className="sr-only" htmlFor={`role-${employee.id}`}>
+        Função de {employee.name}
+      </label>
+      <select
+        id={`role-${employee.id}`}
+        className="cell-input role-input role-select"
+        value={custom ? CUSTOM_ROLE : employee.role}
+        onChange={(event) => {
+          const value = event.target.value;
+          if (value === CUSTOM_ROLE) {
+            setCustom(true);
+            return;
+          }
+          setCustom(false);
+          onUpdate(employee.id, { role: value });
+        }}
+      >
+        <option value="">Sem função</option>
+        {choices.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+        <option value={CUSTOM_ROLE}>Outra função…</option>
+      </select>
+
+      {custom && (
+        <input
+          className="cell-input role-custom"
+          value={employee.role}
+          onChange={(event) =>
+            onUpdate(employee.id, { role: event.target.value })
+          }
+          placeholder="Escreve a função"
+          maxLength={40}
+          autoComplete="off"
+          aria-label={`Escrever a função de ${employee.name}`}
+        />
+      )}
+    </div>
+  );
+}
 
 const AVATAR_COLORS = [
   "#c8322b",
@@ -55,7 +128,12 @@ export default function TeamView({
 }: Props) {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
+  const [customRole, setCustomRole] = useState(false);
   const [contract, setContract] = useState("");
+  const roleOptions = useMemo(
+    () => roleChoices(state.employees),
+    [state.employees],
+  );
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -63,6 +141,7 @@ export default function TeamView({
     onAdd(name, role, parseContract(contract));
     setName("");
     setRole("");
+    setCustomRole(false);
     setContract("");
   };
 
@@ -70,12 +149,6 @@ export default function TeamView({
 
   return (
     <div className="team-view">
-      <datalist id="role-options">
-        {ROLE_SUGGESTIONS.map((option) => (
-          <option key={option} value={option} />
-        ))}
-      </datalist>
-
       <section className="card team-card">
         <div className="section-head">
           <div>
@@ -105,16 +178,41 @@ export default function TeamView({
           </div>
           <div className="field">
             <label htmlFor="new-role">Função</label>
-            <input
+            <select
               id="new-role"
-              className="input"
-              value={role}
-              onChange={(event) => setRole(event.target.value)}
-              placeholder="Pizzaiolo, cozinha, sala…"
-              list="role-options"
-              maxLength={40}
-              autoComplete="off"
-            />
+              className="input role-select"
+              value={customRole ? CUSTOM_ROLE : role}
+              onChange={(event) => {
+                const value = event.target.value;
+                if (value === CUSTOM_ROLE) {
+                  setCustomRole(true);
+                  setRole("");
+                  return;
+                }
+                setCustomRole(false);
+                setRole(value);
+              }}
+            >
+              <option value="">Sem função</option>
+              {roleOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+              <option value={CUSTOM_ROLE}>Outra função…</option>
+            </select>
+            {customRole && (
+              <input
+                className="input role-custom"
+                value={role}
+                onChange={(event) => setRole(event.target.value)}
+                placeholder="Escreve a função"
+                maxLength={40}
+                autoComplete="off"
+                autoFocus
+                aria-label="Escrever outra função"
+              />
+            )}
           </div>
           <div className="field field-hours">
             <label htmlFor="new-contract">Contrato (h/semana)</label>
@@ -181,19 +279,10 @@ export default function TeamView({
                       }
                       maxLength={60}
                     />
-                    <label className="sr-only" htmlFor={`role-${employee.id}`}>
-                      Função de {employee.name}
-                    </label>
-                    <input
-                      id={`role-${employee.id}`}
-                      className="cell-input role-input"
-                      value={employee.role}
-                      onChange={(event) =>
-                        onUpdate(employee.id, { role: event.target.value })
-                      }
-                      placeholder="Função"
-                      list="role-options"
-                      maxLength={40}
+                    <RoleCell
+                      employee={employee}
+                      employees={state.employees}
+                      onUpdate={onUpdate}
                     />
                   </div>
 

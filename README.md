@@ -18,7 +18,8 @@ login: abre o site, escolhe a semana e clica nos turnos.
   um calendário mensal para planear o mês completo sem arrastar a tabela.
 - No iPhone instalado, o zoom por pinça e o zoom automático ao tocar nos campos
   estão desativados, para o horário não desalinhar.
-- Gestão da equipa: nome, função, horas de contrato e remoção.
+- Gestão da equipa: nome, função, horas de contrato e remoção. A função é
+  escolhida numa lista, também no telemóvel, com opção para escrever outra.
 - Turnos e mínimos de cobertura configuráveis. O mínimo da equipa não conta
   com os pizzaiolos, que têm um mínimo próprio em cada turno; a quantidade é
   escolhida numa lista.
@@ -191,8 +192,10 @@ supabase/
 
 Cada publicação é marcada com uma tag Git (`v0.0.7`, `v0.0.8`, …) e a versão
 aparece no rodapé do site. A numeração passou a usar três números para subir
-mais devagar. A versão atual é **v0.0.7**.
+mais devagar. A versão atual é **v0.0.8**.
 
+- **v0.0.8** — escolha da função numa lista no telemóvel, igual ao computador,
+  com opção de escrever uma função personalizada.
 - **v0.0.7** — zoom por pinça e zoom automático dos campos desativados no
   iPhone, para o horário não desalinhar.
 - **v0.0.6** — o botão de exportação do mês na partilha por WhatsApp passa a
@@ -211,7 +214,7 @@ mais devagar. A versão atual é **v0.0.7**.
   de pizzaiolos e modo móvel focado num dia, com calendário mensal.
 
 As etiquetas antigas `v0.1` a `v0.8` continuam no histórico do GitHub. A partir
-daqui a sequência é `v0.0.7`, `v0.0.8`, `v0.0.9`, `v0.1.0`.
+daqui a sequência é `v0.0.8`, `v0.0.9`, `v0.1.0`.
 
 ## Comandos
 

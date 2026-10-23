@@ -1150,6 +1150,23 @@ button {
   color: var(--ink-soft);
 }
 
+.role-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.role-select {
+  cursor: pointer;
+}
+
+.role-custom {
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .contract-field {
   display: flex;
   align-items: center;
@@ -1871,6 +1888,10 @@ code {
   .input,
   .cell-input {
     font-size: 16px;
+  }
+
+  .role-select {
+    min-height: 40px;
   }
 
   .topbar {
