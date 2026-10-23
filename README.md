@@ -189,25 +189,29 @@ supabase/
 
 ## Versões
 
-Cada publicação é marcada com uma tag Git (`v0.1`, `v0.2`, …) e a versão
-aparece no rodapé do site. A versão atual é **v0.8**.
+Cada publicação é marcada com uma tag Git (`v0.0.7`, `v0.0.8`, …) e a versão
+aparece no rodapé do site. A numeração passou a usar três números para subir
+mais devagar. A versão atual é **v0.0.7**.
 
-- **v0.8** — zoom por pinça e zoom automático dos campos desativados no iPhone,
-  para o horário não desalinhar.
-- **v0.7** — o botão de exportação do mês na partilha por WhatsApp passa a
+- **v0.0.7** — zoom por pinça e zoom automático dos campos desativados no
+  iPhone, para o horário não desalinhar.
+- **v0.0.6** — o botão de exportação do mês na partilha por WhatsApp passa a
   chamar-se apenas **Mês**.
-- **v0.6** — o mínimo de cobertura da equipa passa a excluir os pizzaiolos; os
-  dois mínimos são independentes.
-- **v0.5** — opção **Mês completo** na partilha por WhatsApp, com a imagem e a
+- **v0.0.5** — o mínimo de cobertura da equipa passa a excluir os pizzaiolos;
+  os dois mínimos são independentes.
+- **v0.0.4** — opção de partilha do mês completo por WhatsApp, com a imagem e a
   legenda do mês inteiro.
-- **v0.4** — painel Resumo ao abrir o site, com os turnos de hoje, a cobertura
+- **v0.0.3** — painel Resumo ao abrir o site, com os turnos de hoje, a cobertura
   diária, os avisos e atalhos para cada dia da semana.
-- **v0.3** — instalação no iPhone como app no ecrã principal, com ícone
+- **v0.0.2** — instalação no iPhone como app no ecrã principal, com ícone
   próprio e abertura em ecrã inteiro.
-- **v0.2** — mínimo de pizzaiolos separado do resto da equipa em cada turno,
+- **v0.0.1** — mínimo de pizzaiolos separado do resto da equipa em cada turno,
   escolhido numa lista, com avisos e linha de cobertura próprios.
-- **v0.1** — tabela semanal, exportação para WhatsApp, grupos de pizzaiolos e
-  modo móvel focado num dia, com calendário mensal.
+- **v0.0.0** — versão inicial: tabela semanal, exportação para WhatsApp, grupos
+  de pizzaiolos e modo móvel focado num dia, com calendário mensal.
+
+As etiquetas antigas `v0.1` a `v0.8` continuam no histórico do GitHub. A partir
+daqui a sequência é `v0.0.7`, `v0.0.8`, `v0.0.9`, `v0.1.0`.
 
 ## Comandos
 
