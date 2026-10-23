@@ -1,0 +1,406 @@
+"use client";
+
+import { Fragment, useMemo } from "react";
+import { SHIFT_NAMES } from "@/lib/defaults";
+import {
+  addDays,
+  dayMonth,
+  dayMonthLong,
+  isWeekendDay,
+  isoWeekNumber,
+  todayISO,
+  weekDays,
+  weekLabel,
+  weekStart,
+  weekdayShort,
+} from "@/lib/dates";
+import {
+  assignmentKey,
+  buildWeekWarnings,
+  employeeWeekMinutes,
+  formatDuration,
+  shiftTimeLabel,
+  weekTotals,
+} from "@/lib/schedule";
+import { groupEmployees, hasEmployeeGroups } from "@/lib/team-groups";
+import type { ScheduleState, ShiftKey } from "@/lib/types";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CopyIcon,
+  TeamIcon,
+  WarningIcon,
+} from "./icons";
+
+type Props = {
+  state: ScheduleState;
+  week: string;
+  onWeekChange: (week: string) => void;
+  onToggle: (date: string, employeeId: string, shift: ShiftKey) => void;
+  onCopyPrevious: () => void;
+  onGoTeam: () => void;
+};
+
+export default function ScheduleView({
+  state,
+  week,
+  onWeekChange,
+  onToggle,
+  onCopyPrevious,
+  onGoTeam,
+}: Props) {
+  const days = useMemo(() => weekDays(week), [week]);
+  const today = todayISO();
+  const currentWeek = useMemo(() => days.includes(today), [days, today]);
+  const totals = useMemo(() => weekTotals(state, week), [state, week]);
+  const warnings = useMemo(() => buildWeekWarnings(state, week), [state, week]);
+  const employeeGroups = useMemo(
+    () => groupEmployees(state.employees),
+    [state.employees],
+  );
+  const showGroups = hasEmployeeGroups(employeeGroups);
+
+  const assigned = useMemo(
+    () =>
+      new Set(
+        state.assignments.map((item) =>
+          assignmentKey(item.date, item.employeeId, item.shift),
+        ),
+      ),
+    [state.assignments],
+  );
+
+  const coverage = useMemo(() => {
+    const map = new Map<string, { A: number; B: number }>();
+    for (const date of days) map.set(date, { A: 0, B: 0 });
+    for (const item of state.assignments) {
+      const entry = map.get(item.date);
+      if (entry) entry[item.shift] += 1;
+    }
+    return map;
+  }, [state.assignments, days]);
+
+  const previousWeek = useMemo(() => weekDays(addDays(week, -7)), [week]);
+  const previousCount = useMemo(
+    () =>
+      state.assignments.filter((item) => previousWeek.includes(item.date))
+        .length,
+    [state.assignments, previousWeek],
+  );
+
+  const todayLabel = new Intl.DateTimeFormat("pt-PT", {
+    dateStyle: "long",
+  }).format(new Date());
+
+  const employeeCount = state.employees.length;
+
+  return (
+    <div className="schedule-view">
+      <section className="week-card card no-print">
+        <div className="week-main">
+          <div className="week-nav">
+            <button
+              type="button"
+              className="btn icon"
+              aria-label="Semana anterior"
+              onClick={() => onWeekChange(addDays(week, -7))}
+            >
+              <ArrowLeftIcon className="btn-icon" />
+            </button>
+            <div className="week-title">
+              <span className="week-kicker">
+                Semana {isoWeekNumber(week)}
+                {currentWeek ? " · esta semana" : ""}
+              </span>
+              <h2 className="week-range">{weekLabel(week)}</h2>
+            </div>
+            <button
+              type="button"
+              className="btn icon"
+              aria-label="Semana seguinte"
+              onClick={() => onWeekChange(addDays(week, 7))}
+            >
+              <ArrowRightIcon className="btn-icon" />
+            </button>
+          </div>
+
+          <div className="week-actions">
+            <button
+              type="button"
+              className="btn ghost"
+              disabled={currentWeek}
+              onClick={() => onWeekChange(weekStart(today))}
+            >
+              Hoje
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={onCopyPrevious}
+              disabled={previousCount === 0}
+              title={
+                previousCount === 0
+                  ? "A semana anterior não tem turnos"
+                  : "Copiar os turnos da semana anterior para esta semana"
+              }
+            >
+              <CopyIcon className="btn-icon" />
+              Copiar semana anterior
+            </button>
+          </div>
+        </div>
+
+        <div className="week-stats">
+          <span className="stat">
+            <TeamIcon className="stat-icon" />
+            <strong>{employeeCount}</strong>{" "}
+            {employeeCount === 1 ? "colaborador" : "colaboradores"}
+          </span>
+          <span className="stat">
+            <strong>{totals.people}</strong> com turnos
+          </span>
+          <span className="stat">
+            <strong>{formatDuration(totals.minutes)}</strong> atribuídas
+          </span>
+          <span className={warnings.length > 0 ? "stat warn" : "stat"}>
+            <WarningIcon className="stat-icon" />
+            <strong>{warnings.length}</strong>{" "}
+            {warnings.length === 1 ? "aviso" : "avisos"}
+          </span>
+        </div>
+      </section>
+
+      <div className="print-only print-head">
+        <div>
+          <span className="print-brand">Mr Pizza</span>
+          <span className="print-sub">Horário da equipa</span>
+        </div>
+        <div className="print-week">
+          <strong>{weekLabel(week)}</strong>
+          <span>Semana {isoWeekNumber(week)}</span>
+        </div>
+        <div className="print-note">Impresso a {todayLabel}</div>
+      </div>
+
+      {employeeCount === 0 ? (
+        <section className="card empty no-print">
+          <span className="empty-mark">
+            <TeamIcon className="empty-icon" />
+          </span>
+          <h2>Ainda não tens equipa</h2>
+          <p>
+            Adiciona os colaboradores do Mr Pizza e depois clica nos turnos para
+            montar a semana.
+          </p>
+          <button type="button" className="btn primary" onClick={onGoTeam}>
+            Adicionar colaboradores
+          </button>
+        </section>
+      ) : (
+        <section className="grid-card card">
+          <div className="grid-head no-print">
+            <span className="grid-hint">
+              Clica num turno para atribuir ou remover.
+            </span>
+            <span className="grid-hint subtle">
+              {totals.assignments} {totals.assignments === 1 ? "turno" : "turnos"}{" "}
+              nesta semana
+            </span>
+          </div>
+
+          <div className="grid-scroll">
+            <table className="schedule">
+              <caption className="sr-only">
+                Horário da semana de {weekLabel(week)}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col" className="emp-col head">
+                    Colaborador
+                  </th>
+                  {days.map((date) => (
+                    <th
+                      key={date}
+                      scope="col"
+                      className={`day-col${date === today ? " is-today" : ""}`}
+                    >
+                      <span className="dow">{weekdayShort(date)}</span>
+                      <span className="date-num">{dayMonth(date)}</span>
+                    </th>
+                  ))}
+                  <th scope="col" className="total-col head">
+                    Total
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {employeeGroups.map((group) => (
+                  <Fragment key={group.key}>
+                    {showGroups && (
+                      <tr className="employee-group-row">
+                        <th scope="rowgroup" colSpan={days.length + 2}>
+                          {group.label}
+                        </th>
+                      </tr>
+                    )}
+                    {group.employees.map((employee) => {
+                      const minutes = employeeWeekMinutes(
+                        state,
+                        employee.id,
+                        week,
+                      );
+                      const contractMinutes =
+                        employee.contractHours !== null
+                          ? Math.round(employee.contractHours * 60)
+                          : null;
+                      const over =
+                        contractMinutes !== null && minutes > contractMinutes;
+                      return (
+                        <tr key={employee.id}>
+                          <th scope="row" className="emp-col employee-cell">
+                            <span className="emp-name">{employee.name}</span>
+                            {employee.role && (
+                              <span className="emp-role">{employee.role}</span>
+                            )}
+                          </th>
+                          {days.map((date) => (
+                            <td
+                              key={date}
+                              className={`shift-cell${date === today ? " is-today" : ""}`}
+                            >
+                              {SHIFT_NAMES.map((name, index) => {
+                                const shift: ShiftKey =
+                                  index === 0 ? "A" : "B";
+                                const time = state.settings[
+                                  isWeekendDay(date) ? "weekend" : "weekday"
+                                ][index];
+                                const active = assigned.has(
+                                  assignmentKey(date, employee.id, shift),
+                                );
+                                return (
+                                  <button
+                                    key={shift}
+                                    type="button"
+                                    className="shift-btn"
+                                    aria-pressed={active}
+                                    aria-label={`${employee.name}: ${name}, ${weekdayShort(date)} ${dayMonth(date)}`}
+                                    onClick={() =>
+                                      onToggle(date, employee.id, shift)
+                                    }
+                                  >
+                                    <span className="s-name">{name}</span>
+                                    <span className="s-time">
+                                      {shiftTimeLabel(time)}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </td>
+                          ))}
+                          <td className="total-cell">
+                            <span
+                              className={`total-hours${over ? " over" : ""}`}
+                            >
+                              {formatDuration(minutes)}
+                            </span>
+                            {employee.contractHours !== null && (
+                              <span className="total-contract">
+                                de {employee.contractHours}h
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </Fragment>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th scope="row" className="emp-col coverage-label">
+                    Cobertura
+                  </th>
+                  {days.map((date) => {
+                    const counts = coverage.get(date) ?? { A: 0, B: 0 };
+                    return (
+                      <td key={date} className="coverage-cell">
+                        {([0, 1] as const).map((index) => {
+                          const shift: ShiftKey = index === 0 ? "A" : "B";
+                          const count = counts[shift];
+                          const minimum = state.settings.minStaff[index];
+                          const low = count < minimum;
+                          return (
+                            <span
+                              key={shift}
+                              className={`cov${low ? " low" : ""}`}
+                              title={`${SHIFT_NAMES[index]}: ${count} ${
+                                count === 1 ? "pessoa" : "pessoas"
+                              } (mínimo ${minimum})`}
+                            >
+                              <b>{count}</b>
+                              {shift}
+                            </span>
+                          );
+                        })}
+                      </td>
+                    );
+                  })}
+                  <td className="total-cell coverage-total">
+                    <span className="total-hours">
+                      {formatDuration(totals.minutes)}
+                    </span>
+                    <span className="total-contract">equipa</span>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {warnings.length > 0 && (
+        <section className="card warnings">
+          <h3>
+            <WarningIcon className="warn-icon" />
+            Avisos da semana
+            <span className="warn-count">{warnings.length}</span>
+          </h3>
+          <ul>
+            {warnings.map((warning) => (
+              <li key={warning.id} className={`warn-item ${warning.kind}`}>
+                <span className="warn-dot" aria-hidden="true" />
+                <span>{warning.message}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="warn-foot">
+            Podes ajustar o mínimo por turno nas definições.
+          </p>
+        </section>
+      )}
+
+      {warnings.length === 0 && employeeCount > 0 && (
+        <section className="all-good">
+          <span className="all-good-dot" aria-hidden="true" />
+          Sem avisos. Cobertura e contratos em dia.
+        </section>
+      )}
+
+      <div className="print-only print-foot">
+        <span>
+          Mr Pizza · {weekLabel(week)} · {formatDuration(totals.minutes)}{" "}
+          atribuídas
+        </span>
+        <span>Gerado no gestor de horários</span>
+      </div>
+      <span className="sr-only">
+        {weekLabel(week)}: {days
+          .map(
+            (date) =>
+              `${weekdayShort(date)} ${dayMonthLong(date)} — ${coverage.get(date)?.A ?? 0} no turno de dia, ${coverage.get(date)?.B ?? 0} no turno de noite`,
+          )
+          .join("; ")}
+      </span>
+    </div>
+  );
+}
