@@ -199,8 +199,10 @@ supabase/
 
 Cada publicação é marcada com uma tag Git (`v0.1.1`, `v0.1.2`, …) e a versão
 aparece no rodapé do site. A numeração passou a usar três números para subir
-mais devagar. A versão atual é **v0.1.2**.
+mais devagar. A versão atual é **v0.1.3**.
 
+- **v0.1.3** — o aviso de falta de ligação desaparece assim que as alterações
+  pendentes são enviadas para o Supabase.
 - **v0.1.2** — modo offline: dá para continuar a preparar o horário sem
   internet; as alterações ficam no dispositivo e sobem sozinhas quando a
   ligação volta.

@@ -25,6 +25,15 @@ const PENDING_KEY = "mr-pizza-schedule-v1-pending";
 const LOAD_TIMEOUT_MS = 8000;
 const SYNC_RETRY_MS = 15000;
 
+const NOTICE_QUEUED =
+  "Há alterações guardadas neste dispositivo à espera de ligação. Estão a ser enviadas.";
+const NOTICE_NO_NET =
+  "Estás sem internet. Podes continuar a preparar o horário: as alterações ficam neste dispositivo e são enviadas quando voltares a ter ligação.";
+const NOTICE_NO_SERVER =
+  "Sem ligação ao servidor. Podes continuar a editar: as alterações ficam neste dispositivo e são enviadas quando voltares a ter internet.";
+
+const CONNECTION_NOTICES = [NOTICE_QUEUED, NOTICE_NO_NET, NOTICE_NO_SERVER];
+
 type Tab = "overview" | "schedule" | "team" | "settings";
 type SaveStatus = "idle" | "saving" | "saved" | "offline" | "error";
 
@@ -211,16 +220,12 @@ export default function ScheduleApp() {
         pendingRef.current = queued;
         setPending(true);
         setStatus("offline");
-        setNotice(
-          "Há alterações guardadas neste dispositivo à espera de ligação. Estão a ser enviadas.",
-        );
+        setNotice(NOTICE_QUEUED);
         return;
       }
 
       if (!isOnline()) {
-        useCached(
-          "Estás sem internet. Podes continuar a preparar o horário: as alterações ficam neste dispositivo e são enviadas quando voltares a ter ligação.",
-        );
+        useCached(NOTICE_NO_NET);
         return;
       }
 
@@ -268,9 +273,7 @@ export default function ScheduleApp() {
           setLocalBackup(local);
         }
       } catch {
-        useCached(
-          "Sem ligação ao servidor. Podes continuar a editar: as alterações ficam neste dispositivo e são enviadas quando voltares a ter internet.",
-        );
+        useCached(NOTICE_NO_SERVER);
       } finally {
         window.clearTimeout(timeout);
       }
@@ -336,12 +339,17 @@ export default function ScheduleApp() {
         markPendingLocal(false);
         pendingRef.current = null;
         setPending(false);
+        // O aviso de falta de ligação deixa de ser verdade.
+        setNotice((current) =>
+          current && CONNECTION_NOTICES.includes(current) ? null : current,
+        );
       } catch {
         if (seq !== saveSeqRef.current) return;
         pendingRef.current = next;
         markPendingLocal(true);
         setPending(true);
         setStatus("offline");
+        setNotice(NOTICE_NO_SERVER);
       }
     },
     [mode],
