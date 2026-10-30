@@ -698,6 +698,7 @@ button {
 
 .grid-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -718,196 +719,8 @@ button {
 }
 
 .day-strip-head,
-.mobile-day-strip,
-.month-panel,
-.emp-mobile-total {
+.month-panel {
   display: none;
-}
-
-.schedule {
-  width: 100%;
-  min-width: 960px;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-.schedule th,
-.schedule td {
-  text-align: center;
-}
-
-.emp-col {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  width: 208px;
-  min-width: 200px;
-  padding: 11px 14px;
-  text-align: left;
-  background: var(--surface);
-  border-right: 1px solid var(--line);
-}
-
-.schedule thead .emp-col {
-  z-index: 4;
-  background: var(--surface-alt);
-}
-
-.schedule thead th {
-  padding: 10px 8px 9px;
-  background: var(--surface-alt);
-  border-bottom: 1px solid var(--line);
-  font-weight: 600;
-}
-
-.day-col {
-  min-width: 92px;
-}
-
-.dow {
-  display: block;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.date-num {
-  display: block;
-  margin-top: 1px;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-
-.day-col.is-today {
-  background: #fff4f1;
-}
-
-.day-col.is-today .dow {
-  color: var(--brand);
-}
-
-.schedule tbody tr:hover td,
-.schedule tbody tr:hover .employee-cell {
-  background: #fdf9f5;
-}
-
-.employee-cell {
-  vertical-align: middle;
-}
-
-.employee-group-row th {
-  padding: 8px 14px;
-  background: var(--surface-alt);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  text-align: left;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.emp-name {
-  display: block;
-  font-size: 13.5px;
-  font-weight: 600;
-  line-height: 1.25;
-  color: var(--ink);
-}
-
-.emp-role {
-  display: block;
-  margin-top: 2px;
-  font-size: 11.5px;
-  color: var(--muted);
-}
-
-.shift-cell {
-  padding: 6px 5px;
-  vertical-align: middle;
-}
-
-.shift-cell.is-today {
-  background: #fffaf7;
-}
-
-.shift-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  width: 100%;
-  min-width: 88px;
-  padding: 5px 6px;
-  border: 1px solid #e9dfd6;
-  border-radius: 9px;
-  background: #fff;
-  color: var(--muted);
-  line-height: 1.2;
-  transition:
-    background 0.12s ease,
-    border-color 0.12s ease,
-    transform 0.06s ease;
-}
-
-.shift-btn + .shift-btn {
-  margin-top: 5px;
-}
-
-.shift-btn:hover {
-  border-color: var(--brand);
-  background: var(--brand-soft);
-}
-
-.shift-btn:active {
-  transform: scale(0.985);
-}
-
-.shift-btn .s-name {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.shift-btn .s-time {
-  font-size: 10px;
-  font-variant-numeric: tabular-nums;
-  opacity: 0.8;
-}
-
-.shift-btn[aria-pressed="true"] {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #fff;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
-}
-
-.shift-btn[aria-pressed="true"] .s-time {
-  opacity: 0.95;
-}
-
-.total-col {
-  width: 96px;
-  min-width: 96px;
-  padding-right: 14px !important;
-  text-align: right !important;
-}
-
-.total-cell {
-  width: 96px;
-  min-width: 96px;
-  padding: 10px 14px;
-  text-align: right;
-  vertical-align: middle;
-  border-left: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
 }
 
 .total-hours {
@@ -921,6 +734,11 @@ button {
   color: var(--brand);
 }
 
+.total-contract.over {
+  color: var(--brand);
+  font-weight: 700;
+}
+
 .total-contract {
   display: block;
   margin-top: 1px;
@@ -928,27 +746,144 @@ button {
   color: var(--muted);
 }
 
-.schedule tfoot th,
-.schedule tfoot td {
+/* Mesmo aspeto da imagem exportada para o WhatsApp (lib/export-image.ts). */
+.roster {
+  width: auto;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: center;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.roster th,
+.roster td {
+  padding: 0;
+  border: 1px solid #1a1a1a;
+}
+
+.roster thead th {
   padding: 9px 8px;
-  background: var(--surface-alt);
-  border-top: 1px solid var(--line);
-}
-
-.schedule tfoot .emp-col {
-  background: var(--surface-alt);
-}
-
-.coverage-label {
-  font-size: 11px;
+  background: #1f4e78;
+  color: #fff;
   font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--muted);
+  white-space: nowrap;
 }
 
-.coverage-cell {
-  vertical-align: middle;
+.roster-groups th:not(.roster-cov-head) {
+  background: #2c5a85;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.roster-groups td {
+  border: 0;
+}
+
+/* Largura fixa: as colunas ficam iguais, mostre-se um grupo ou os dois. */
+.roster-emp {
+  width: 128px;
+  min-width: 128px;
+}
+
+.roster-emp small {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.roster-day {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 96px;
+  min-width: 76px;
+  padding: 8px 10px !important;
+  background: #fff;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.roster tbody .roster-day {
+  color: #000;
+}
+
+.roster .is-weekend .roster-day {
+  background: #8db4e2;
+}
+
+.roster .is-today .roster-day {
+  box-shadow: inset 4px 0 0 var(--brand);
+}
+
+.roster .is-selected .roster-day {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.roster-cell {
+  display: block;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 6px;
+  border: 0;
+  border-radius: 0;
+  background: #c5d9f1;
+  color: #000;
+  font-size: 14px;
+  text-align: center;
+  text-align-last: center;
+  white-space: nowrap;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.is-weekend .roster-cell {
+  background: #8db4e2;
+}
+
+.roster-cell.off {
+  background: #92d050;
+}
+
+.roster-cell.middle {
+  background: #ffe699;
+}
+
+.is-weekend .roster-cell.middle {
+  background: #ffd966;
+}
+
+.roster-cell:hover {
+  filter: brightness(0.93);
+}
+
+.roster-cell:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: -3px;
+}
+
+.roster-cov-head {
+  background: var(--surface-alt) !important;
+  color: var(--muted) !important;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.roster-cov {
+  padding: 6px !important;
+  background: var(--surface-alt);
+  white-space: nowrap;
+}
+
+.roster tfoot th,
+.roster tfoot td {
+  padding: 8px 6px;
+  background: var(--surface-alt);
 }
 
 .cov {
@@ -978,10 +913,6 @@ button {
 
 .cov.low b {
   color: var(--brand);
-}
-
-.coverage-total {
-  border-left: 1px solid var(--line);
 }
 
 /* ---------- Avisos ---------- */
@@ -2145,82 +2076,6 @@ code {
     overflow-x: hidden;
   }
 
-  .schedule {
-    min-width: 0;
-    width: 100%;
-    table-layout: fixed;
-  }
-
-  .emp-col {
-    position: static;
-    width: 42%;
-    min-width: 0;
-    padding: 9px 8px;
-    box-shadow: none;
-  }
-
-  .schedule thead .emp-col {
-    background: var(--surface-alt);
-  }
-
-  .day-col {
-    width: 58%;
-    min-width: 0;
-  }
-
-  .total-col,
-  .total-cell {
-    display: none;
-  }
-
-  .mobile-day-hidden {
-    display: none;
-  }
-
-  .shift-cell {
-    padding: 6px;
-  }
-
-  .shift-btn {
-    width: 100%;
-    min-width: 0;
-    padding: 7px 5px;
-  }
-
-  .shift-btn .s-name {
-    font-size: 10px;
-  }
-
-  .shift-btn .s-time {
-    font-size: 9.5px;
-  }
-
-  .emp-name {
-    font-size: 12.5px;
-  }
-
-  .emp-role {
-    font-size: 10.5px;
-  }
-
-  .emp-mobile-total {
-    display: block;
-    margin-top: 3px;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .emp-mobile-total.over {
-    color: var(--brand);
-  }
-
-  .emp-mobile-total small {
-    font-size: 10px;
-    font-weight: 400;
-  }
-
   .day-strip-head {
     display: flex;
     align-items: center;
@@ -2240,73 +2095,6 @@ code {
   .month-toggle {
     padding: 5px 10px;
     font-size: 11.5px;
-  }
-
-  .mobile-day-strip {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 4px;
-    padding: 8px 12px 12px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .day-chip {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    min-width: 0;
-    padding: 7px 2px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: #fff;
-    color: var(--muted);
-    cursor: pointer;
-  }
-
-  .day-chip.is-selected {
-    background: var(--brand);
-    border-color: var(--brand);
-    color: #fff;
-  }
-
-  .day-chip.is-today:not(.is-selected) {
-    border-color: var(--brand);
-    box-shadow: inset 0 0 0 1px var(--brand);
-  }
-
-  .chip-dow {
-    font-size: 8.5px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .chip-num {
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1;
-    color: inherit;
-  }
-
-  .chip-counts {
-    display: flex;
-    gap: 3px;
-    margin-top: 1px;
-  }
-
-  .chip-counts i {
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    border: 1px solid currentColor;
-    opacity: 0.4;
-  }
-
-  .chip-counts i.on {
-    background: currentColor;
-    opacity: 1;
   }
 
   .month-panel {
@@ -2863,78 +2651,6 @@ code {
 
   .grid-scroll {
     overflow: visible;
-  }
-
-  .schedule {
-    width: 100%;
-    min-width: 0;
-    font-size: 9pt;
-  }
-
-  .emp-col {
-    position: static;
-    width: 150px;
-    min-width: 0;
-    box-shadow: none;
-    background: #fff;
-  }
-
-  .schedule thead .emp-col,
-  .schedule thead th,
-  .schedule tfoot th,
-  .schedule tfoot td {
-    background: #f6f1ec;
-  }
-
-  .day-col {
-    min-width: 0;
-  }
-
-  .shift-cell {
-    padding: 3px;
-  }
-
-  .shift-btn {
-    min-width: 0;
-    padding: 3px 2px;
-    border-color: #e2d8d0;
-  }
-
-  .shift-btn + .shift-btn {
-    margin-top: 3px;
-  }
-
-  .shift-btn .s-name {
-    font-size: 7.5pt;
-  }
-
-  .shift-btn .s-time {
-    font-size: 7pt;
-  }
-
-  .shift-btn[aria-pressed="true"] {
-    background: #f3dcd8 !important;
-    border-color: #d8b6b0;
-    color: #4a1f1b;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .total-cell {
-    border-left: 1px solid #e2d8d0;
-  }
-
-  .mobile-day-hidden {
-    display: table-cell !important;
-  }
-
-  .total-col,
-  .total-cell {
-    display: table-cell !important;
-  }
-
-  .emp-mobile-total {
-    display: none !important;
   }
 
   .print-foot {

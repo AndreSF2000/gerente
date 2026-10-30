@@ -15,6 +15,7 @@ import type {
   ShiftTime,
 } from "./types";
 
+/** Turnos com mínimo de cobertura; o intermédio não conta para os mínimos. */
 export const SHIFT_KEYS: ShiftKey[] = ["A", "B"];
 
 export function shiftTimeFor(
@@ -22,7 +23,9 @@ export function shiftTimeFor(
   dateISO: string,
   shift: ShiftKey,
 ): ShiftTime {
-  const pair = isWeekendDay(dateISO) ? settings.weekend : settings.weekday;
+  const weekend = isWeekendDay(dateISO);
+  if (shift === "C") return settings.middle[weekend ? 1 : 0];
+  const pair = weekend ? settings.weekend : settings.weekday;
   return pair[shift === "A" ? 0 : 1];
 }
 
@@ -63,7 +66,15 @@ export function employeeWeekMinutes(
   employeeId: string,
   weekStartISO: string,
 ): number {
-  const days = new Set(weekDays(weekStartISO));
+  return employeeMinutes(state, employeeId, weekDays(weekStartISO));
+}
+
+export function employeeMinutes(
+  state: ScheduleState,
+  employeeId: string,
+  dates: string[],
+): number {
+  const days = new Set(dates);
   let total = 0;
   for (const assignment of state.assignments) {
     if (assignment.employeeId !== employeeId || !days.has(assignment.date)) {
@@ -77,7 +88,11 @@ export function employeeWeekMinutes(
 }
 
 export function weekTotals(state: ScheduleState, weekStartISO: string) {
-  const days = new Set(weekDays(weekStartISO));
+  return rangeTotals(state, weekDays(weekStartISO));
+}
+
+export function rangeTotals(state: ScheduleState, dates: string[]) {
+  const days = new Set(dates);
   let minutes = 0;
   const employeeIds = new Set<string>();
   let assignments = 0;
@@ -98,6 +113,8 @@ export type WeekWarning = {
   id: string;
   kind: "coverage" | "contract" | "double";
   message: string;
+  /** Dia a que o aviso se refere; os avisos de contrato são da semana toda. */
+  date?: string;
 };
 
 export function buildWeekWarnings(
@@ -135,6 +152,7 @@ export function buildWeekWarnings(
         warnings.push({
           id: `coverage-${date}-${shift}`,
           kind: "coverage",
+          date,
           message: `${weekdayLong(date)}, ${dayMonthLong(date)} · Equipa (${
             SHIFT_NAMES[index]
           }): ${count === 1 ? "1 pessoa" : `${count} pessoas`} (mínimo ${minimum}, sem pizzaiolos).`,
@@ -152,6 +170,7 @@ export function buildWeekWarnings(
         warnings.push({
           id: `pizzaiolo-${date}-${shift}`,
           kind: "coverage",
+          date,
           message: `${weekdayLong(date)}, ${dayMonthLong(date)} · Pizzaiolos (${SHIFT_NAMES[index]}): ${
             pizzaioloCount === 1 ? "1 pizzaiolo" : `${pizzaioloCount} pizzaiolos`
           } (mínimo ${pizzaioloMinimum}).`,
@@ -183,6 +202,7 @@ export function buildWeekWarnings(
         warnings.push({
           id: `double-${employee.id}-${date}`,
           kind: "double",
+          date,
           message: `${employee.name} tem os dois turnos no mesmo dia (${weekdayLong(
             date,
           ).toLowerCase()}, ${dayMonthLong(date)}).`,

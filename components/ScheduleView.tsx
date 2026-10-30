@@ -1,18 +1,25 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
-import { SHIFT_NAMES } from "@/lib/defaults";
+import { useEffect, useMemo, useState } from "react";
+import {
+  MAX_MONTH_DAYS_OFF,
+  MAX_MONTH_SUNDAYS_OFF,
+  MIDDLE_NAME,
+  SHIFT_NAMES,
+} from "@/lib/defaults";
 import {
   addDays,
   addMonths,
   dayMonth,
   dayMonthLong,
   dayNumber,
+  daysInMonth,
   isWeekendDay,
   isoWeekNumber,
   monthCalendar,
   monthLabel,
   monthStart,
+  parseISODate,
   todayISO,
   weekDays,
   weekLabel,
@@ -22,12 +29,14 @@ import {
 import {
   assignmentKey,
   buildWeekWarnings,
-  employeeWeekMinutes,
+  employeeMinutes,
   formatDuration,
+  rangeTotals,
+  shiftTimeFor,
   shiftTimeLabel,
-  weekTotals,
 } from "@/lib/schedule";
 import {
+  type EmployeeGroup,
   groupEmployees,
   hasEmployeeGroups,
   isPizzaiolo,
@@ -40,6 +49,17 @@ import {
   TeamIcon,
   WarningIcon,
 } from "./icons";
+
+/** Opções de cada célula, pela ordem do dia; o valor são os turnos (A, B, C). */
+const CELL_OPTIONS = [
+  ["", "Folga"],
+  ["A", SHIFT_NAMES[0]],
+  ["C", MIDDLE_NAME],
+  ["B", SHIFT_NAMES[1]],
+  ["AB", `${SHIFT_NAMES[0]}+${SHIFT_NAMES[1]}`],
+] as const;
+
+const CELL_SHIFTS: ShiftKey[] = ["A", "B", "C"];
 
 type Props = {
   state: ScheduleState;
@@ -63,13 +83,95 @@ export default function ScheduleView({
   const days = useMemo(() => weekDays(week), [week]);
   const today = todayISO();
   const currentWeek = useMemo(() => days.includes(today), [days, today]);
-  const totals = useMemo(() => weekTotals(state, week), [state, week]);
-  const warnings = useMemo(() => buildWeekWarnings(state, week), [state, week]);
+  const [view, setView] = useState<"month" | "week">("month");
+  const [month, setMonth] = useState(() =>
+    monthStart(initialDay ?? (currentWeek ? today : addDays(week, 3))),
+  );
+  const monthView = view === "month";
+  const rows = useMemo(
+    () =>
+      monthView
+        ? Array.from({ length: daysInMonth(month) }, (_, index) =>
+            addDays(month, index),
+          )
+        : days,
+    [monthView, month, days],
+  );
+  const currentPeriod = monthView ? month === monthStart(today) : currentWeek;
+  const periodLabel = monthView ? monthLabel(month) : weekLabel(week);
+  const totals = useMemo(() => rangeTotals(state, rows), [state, rows]);
+  const daysOff = useMemo(() => {
+    const working = new Set(
+      state.assignments.map((item) => `${item.date}|${item.employeeId}`),
+    );
+    return new Map(
+      state.employees.map((employee) => {
+        const off = rows.filter(
+          (date) => !working.has(`${date}|${employee.id}`),
+        );
+        const sundays = off.filter(
+          (date) => parseISODate(date).getUTCDay() === 0,
+        ).length;
+        return [employee.id, { days: off.length, sundays }];
+      }),
+    );
+  }, [state.assignments, state.employees, rows]);
+
+  const warnings = useMemo(() => {
+    if (!monthView) return buildWeekWarnings(state, week);
+    const inMonth = new Set(rows);
+    const result = [];
+    // Semanas que tocam o mês; os avisos de dias fora do mês ficam de fora.
+    for (
+      let start = weekStart(month);
+      start < month || inMonth.has(start);
+      start = addDays(start, 7)
+    ) {
+      for (const warning of buildWeekWarnings(state, start)) {
+        if (warning.date && !inMonth.has(warning.date)) continue;
+        result.push(
+          warning.date
+            ? warning
+            : {
+                ...warning,
+                id: `${warning.id}-${start}`,
+                message: `Semana ${isoWeekNumber(start)}: ${warning.message}`,
+              },
+        );
+      }
+    }
+    const monthName = monthLabel(month).toLowerCase();
+    for (const employee of state.employees) {
+      const off = daysOff.get(employee.id);
+      if (off && off.days > MAX_MONTH_DAYS_OFF) {
+        result.push({
+          id: `off-${employee.id}`,
+          kind: "contract" as const,
+          message: `${employee.name} tem ${off.days} folgas em ${monthName} (máximo ${MAX_MONTH_DAYS_OFF}).`,
+        });
+      }
+      if (off && off.sundays > MAX_MONTH_SUNDAYS_OFF) {
+        result.push({
+          id: `off-sunday-${employee.id}`,
+          kind: "contract" as const,
+          message: `${employee.name} tem ${off.sundays} domingos de folga em ${monthName} (máximo ${MAX_MONTH_SUNDAYS_OFF}).`,
+        });
+      }
+    }
+    return result;
+  }, [monthView, state, week, month, rows, daysOff]);
   const employeeGroups = useMemo(
     () => groupEmployees(state.employees),
     [state.employees],
   );
-  const showGroups = hasEmployeeGroups(employeeGroups);
+  const canFilter = hasEmployeeGroups(employeeGroups);
+  const [groupFilter, setGroupFilter] = useState<
+    "all" | EmployeeGroup["key"]
+  >("all");
+  const filtered = employeeGroups.filter((group) => group.key === groupFilter);
+  const visibleGroups = filtered.length > 0 ? filtered : employeeGroups;
+  const showGroups = hasEmployeeGroups(visibleGroups);
+  const employees = visibleGroups.flatMap((group) => group.employees);
 
   const [selectedDay, setSelectedDay] = useState(
     () => initialDay ?? todayISO(),
@@ -95,6 +197,7 @@ export default function ScheduleView({
   const coverage = useMemo(() => {
     const map = new Map<string, { A: number; B: number }>();
     for (const item of state.assignments) {
+      if (item.shift === "C") continue;
       const entry = map.get(item.date) ?? { A: 0, B: 0 };
       entry[item.shift] += 1;
       map.set(item.date, entry);
@@ -110,6 +213,7 @@ export default function ScheduleView({
     for (const item of state.assignments) {
       const employee = byId.get(item.employeeId);
       if (employee && isPizzaiolo(employee)) continue;
+      if (item.shift === "C") continue;
       const entry = map.get(item.date) ?? { A: 0, B: 0 };
       entry[item.shift] += 1;
       map.set(item.date, entry);
@@ -123,6 +227,7 @@ export default function ScheduleView({
     for (const item of state.assignments) {
       const employee = byId.get(item.employeeId);
       if (!employee || !isPizzaiolo(employee)) continue;
+      if (item.shift === "C") continue;
       const entry = map.get(item.date) ?? { A: 0, B: 0 };
       entry[item.shift] += 1;
       map.set(item.date, entry);
@@ -143,6 +248,26 @@ export default function ScheduleView({
   }).format(new Date());
 
   const employeeCount = state.employees.length;
+  const coverageColumns = [
+    {
+      key: "others",
+      label: "Equipa",
+      title: "Equipa sem pizzaiolos (A = dia, B = noite)",
+      coverage: teamCoverage,
+      minimum: state.settings.minStaff,
+    },
+    {
+      key: "pizzaiolos",
+      label: "Pizzaiolos",
+      title: "Pizzaiolos (A = dia, B = noite)",
+      coverage: pizzaioloCoverage,
+      minimum: state.settings.minPizzaiolo,
+    },
+  ].filter((column) => filtered.length === 0 || column.key === groupFilter);
+  const shownMinutes = employees.reduce(
+    (sum, employee) => sum + employeeMinutes(state, employee.id, rows),
+    0,
+  );
   const countsFor = (date: string) => coverage.get(date) ?? { A: 0, B: 0 };
 
   const goWeek = (delta: number) => {
@@ -152,8 +277,20 @@ export default function ScheduleView({
     setMonthCursor(monthStart(nextDay));
   };
 
+  const showMonth = (next: string) => {
+    setMonth(next);
+    // A semana com o dia 4 tem a quinta-feira neste mês, como a exportação.
+    onWeekChange(weekStart(addDays(next, 3)));
+  };
+
+  const changeView = (next: "month" | "week") => {
+    if (next === "month") setMonth(monthStart(addDays(week, 3)));
+    setView(next);
+  };
+
   const goToday = () => {
     const now = todayISO();
+    if (monthView) return showMonth(monthStart(now));
     onWeekChange(weekStart(now));
     setSelectedDay(now);
     setMonthCursor(monthStart(now));
@@ -179,51 +316,73 @@ export default function ScheduleView({
             <button
               type="button"
               className="btn icon"
-              aria-label="Semana anterior"
-              onClick={() => goWeek(-1)}
+              aria-label={monthView ? "Mês anterior" : "Semana anterior"}
+              onClick={() =>
+                monthView ? showMonth(addMonths(month, -1)) : goWeek(-1)
+              }
             >
               <ArrowLeftIcon className="btn-icon" />
             </button>
             <div className="week-title">
               <span className="week-kicker">
-                Semana {isoWeekNumber(week)}
-                {currentWeek ? " · esta semana" : ""}
+                {monthView
+                  ? `Mês completo${currentPeriod ? " · este mês" : ""}`
+                  : `Semana ${isoWeekNumber(week)}${
+                      currentPeriod ? " · esta semana" : ""
+                    }`}
               </span>
-              <h2 className="week-range">{weekLabel(week)}</h2>
+              <h2 className="week-range">{periodLabel}</h2>
             </div>
             <button
               type="button"
               className="btn icon"
-              aria-label="Semana seguinte"
-              onClick={() => goWeek(1)}
+              aria-label={monthView ? "Mês seguinte" : "Semana seguinte"}
+              onClick={() =>
+                monthView ? showMonth(addMonths(month, 1)) : goWeek(1)
+              }
             >
               <ArrowRightIcon className="btn-icon" />
             </button>
           </div>
 
           <div className="week-actions">
+            <div className="range-tabs" role="group" aria-label="Período">
+              {(["month", "week"] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className="range-tab"
+                  aria-pressed={view === option}
+                  onClick={() => changeView(option)}
+                >
+                  {option === "month" ? "Mês" : "Semana"}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               className="btn ghost"
-              disabled={currentWeek}
+              disabled={currentPeriod}
               onClick={goToday}
             >
               Hoje
             </button>
-            <button
-              type="button"
-              className="btn"
-              onClick={onCopyPrevious}
-              disabled={previousCount === 0}
-              title={
-                previousCount === 0
-                  ? "A semana anterior não tem turnos"
-                  : "Copiar os turnos da semana anterior para esta semana"
-              }
-            >
-              <CopyIcon className="btn-icon" />
-              Copiar semana anterior
-            </button>
+            {!monthView && (
+              <button
+                type="button"
+                className="btn"
+                onClick={onCopyPrevious}
+                disabled={previousCount === 0}
+                title={
+                  previousCount === 0
+                    ? "A semana anterior não tem turnos"
+                    : "Copiar os turnos da semana anterior para esta semana"
+                }
+              >
+                <CopyIcon className="btn-icon" />
+                Copiar semana anterior
+              </button>
+            )}
           </div>
         </div>
 
@@ -253,8 +412,8 @@ export default function ScheduleView({
           <span className="print-sub">Horário da equipa</span>
         </div>
         <div className="print-week">
-          <strong>{weekLabel(week)}</strong>
-          <span>Semana {isoWeekNumber(week)}</span>
+          <strong>{periodLabel}</strong>
+          {!monthView && <span>Semana {isoWeekNumber(week)}</span>}
         </div>
         <div className="print-note">Impresso a {todayLabel}</div>
       </div>
@@ -276,28 +435,51 @@ export default function ScheduleView({
       ) : (
         <section className="grid-card card">
           <div className="grid-head no-print">
+            {canFilter && (
+              <div className="range-tabs" role="group" aria-label="Mostrar">
+                {(
+                  [
+                    ["all", "Todos"],
+                    ["pizzaiolos", "Pizzaiolos"],
+                    ["others", "Colaboradores"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className="range-tab"
+                    aria-pressed={groupFilter === key}
+                    onClick={() => setGroupFilter(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
             <span className="grid-hint">
-              Clica num turno para atribuir ou remover.
+              Clica numa célula para escolher o turno.
             </span>
             <span className="grid-hint subtle">
               {totals.assignments} {totals.assignments === 1 ? "turno" : "turnos"}{" "}
-              nesta semana
+              {monthView ? "neste mês" : "nesta semana"}
             </span>
           </div>
 
-          <div className="day-strip-head no-print">
-            <span>Turnos por dia</span>
-            <button
-              type="button"
-              className="btn ghost small month-toggle"
-              aria-expanded={monthOpen}
-              onClick={toggleMonth}
-            >
-              {monthOpen ? "Fechar mês" : "Mês"}
-            </button>
-          </div>
+          {!monthView && (
+            <div className="day-strip-head no-print">
+              <span>Turnos por dia</span>
+              <button
+                type="button"
+                className="btn ghost small month-toggle"
+                aria-expanded={monthOpen}
+                onClick={toggleMonth}
+              >
+                {monthOpen ? "Fechar mês" : "Mês"}
+              </button>
+            </div>
+          )}
 
-          {monthOpen && (
+          {!monthView && monthOpen && (
             <div className="month-panel no-print">
               <div className="month-head">
                 <button
@@ -368,240 +550,199 @@ export default function ScheduleView({
             </div>
           )}
 
-          <div
-            className="mobile-day-strip no-print"
-            role="group"
-            aria-label="Dias da semana"
-          >
-            {days.map((date) => {
-              const counts = countsFor(date);
-              return (
-                <button
-                  key={date}
-                  type="button"
-                  className={`day-chip${
-                    date === selectedDay ? " is-selected" : ""
-                  }${date === today ? " is-today" : ""}`}
-                  aria-pressed={date === selectedDay}
-                  aria-label={`${weekdayShort(date)} ${dayMonthLong(
-                    date,
-                  )}: ${counts.A} no turno de dia e ${counts.B} no turno de noite`}
-                  onClick={() => selectDay(date)}
-                >
-                  <span className="chip-dow">{weekdayShort(date)}</span>
-                  <span className="chip-num">{dayNumber(date)}</span>
-                  <span className="chip-counts" aria-hidden="true">
-                    <i className={counts.A > 0 ? "on" : ""} />
-                    <i className={counts.B > 0 ? "on" : ""} />
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
           <div className="grid-scroll">
-            <table className="schedule">
+            <table className="roster">
               <caption className="sr-only">
-                Horário da semana de {weekLabel(week)}
+                Horário de {periodLabel}
               </caption>
               <thead>
-                <tr>
-                  <th scope="col" className="emp-col head">
-                    Colaborador
-                  </th>
-                  {days.map((date) => (
+                {showGroups && (
+                  <tr className="roster-groups">
+                    <td />
+                    {visibleGroups.map((group) => (
+                      <th
+                        key={group.key}
+                        scope="colgroup"
+                        colSpan={group.employees.length}
+                      >
+                        {group.label}
+                      </th>
+                    ))}
                     <th
-                      key={date}
-                      scope="col"
-                      className={`day-col${date === today ? " is-today" : ""}${
-                        date !== selectedDay ? " mobile-day-hidden" : ""
-                      }`}
+                      scope="colgroup"
+                      colSpan={coverageColumns.length}
+                      className="roster-cov-head"
                     >
-                      <span className="dow">{weekdayShort(date)}</span>
-                      <span className="date-num">{dayMonth(date)}</span>
+                      Cobertura
+                    </th>
+                  </tr>
+                )}
+                <tr>
+                  <th scope="col" className="roster-day">
+                    Dias
+                  </th>
+                  {employees.map((employee) => (
+                    <th key={employee.id} scope="col" className="roster-emp">
+                      {employee.name}
+                      {employee.role && <small>{employee.role}</small>}
                     </th>
                   ))}
-                  <th scope="col" className="total-col head">
-                    Total
-                  </th>
+                  {coverageColumns.map((column) => (
+                    <th
+                      key={column.key}
+                      scope="col"
+                      className="roster-cov-head"
+                      title={column.title}
+                    >
+                      {column.label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {employeeGroups.map((group) => (
-                  <Fragment key={group.key}>
-                    {showGroups && (
-                      <tr className="employee-group-row">
-                        <th scope="rowgroup" colSpan={days.length + 2}>
-                          {group.label}
-                        </th>
-                      </tr>
-                    )}
-                    {group.employees.map((employee) => {
-                      const minutes = employeeWeekMinutes(
-                        state,
-                        employee.id,
-                        week,
-                      );
-                      const contractMinutes =
-                        employee.contractHours !== null
-                          ? Math.round(employee.contractHours * 60)
-                          : null;
-                      const over =
-                        contractMinutes !== null && minutes > contractMinutes;
-                      return (
-                        <tr key={employee.id}>
-                          <th scope="row" className="emp-col employee-cell">
-                            <span className="emp-name">{employee.name}</span>
-                            {employee.role && (
-                              <span className="emp-role">{employee.role}</span>
-                            )}
-                            <span
-                              className={`emp-mobile-total${
-                                over ? " over" : ""
+                {rows.map((date) => {
+                  const weekend = isWeekendDay(date);
+                  return (
+                    <tr
+                      key={date}
+                      className={`${weekend ? "is-weekend" : ""}${
+                        date === today ? " is-today" : ""
+                      }${date === selectedDay ? " is-selected" : ""}`}
+                    >
+                      <th scope="row" className="roster-day">
+                        {weekdayShort(date)} {dayNumber(date)}
+                      </th>
+                      {employees.map((employee) => {
+                        const active = CELL_SHIFTS.filter((shift) =>
+                          assigned.has(assignmentKey(date, employee.id, shift)),
+                        );
+                        const value = active.join("");
+                        const known = CELL_OPTIONS.some(([key]) => key === value);
+                        const time = active
+                          .map((shift) =>
+                            shiftTimeLabel(shiftTimeFor(state.settings, date, shift)),
+                          )
+                          .join(" e ");
+                        return (
+                          <td key={employee.id}>
+                            <select
+                              className={`roster-cell${
+                                value === "" ? " off" : value === "C" ? " middle" : ""
                               }`}
+                              value={value}
+                              title={time || "Folga"}
+                              aria-label={`${employee.name}, ${weekdayShort(
+                                date,
+                              )} ${dayMonth(date)}`}
+                              onChange={(event) => {
+                                const next = event.target.value;
+                                for (const shift of CELL_SHIFTS) {
+                                  if (active.includes(shift) !== next.includes(shift)) {
+                                    onToggle(date, employee.id, shift);
+                                  }
+                                }
+                              }}
                             >
-                              {formatDuration(minutes)}
-                              {employee.contractHours !== null && (
-                                <small> / {employee.contractHours}h</small>
-                              )}
-                            </span>
-                          </th>
-                          {days.map((date) => (
-                            <td
-                              key={date}
-                              className={`shift-cell${
-                                date === today ? " is-today" : ""
-                              }${date !== selectedDay ? " mobile-day-hidden" : ""}`}
-                            >
-                              {SHIFT_NAMES.map((name, index) => {
-                                const shift: ShiftKey =
-                                  index === 0 ? "A" : "B";
-                                const time = state.settings[
-                                  isWeekendDay(date) ? "weekend" : "weekday"
-                                ][index];
-                                const active = assigned.has(
-                                  assignmentKey(date, employee.id, shift),
-                                );
-                                return (
-                                  <button
-                                    key={shift}
-                                    type="button"
-                                    className="shift-btn"
-                                    aria-pressed={active}
-                                    aria-label={`${employee.name}: ${name}, ${weekdayShort(date)} ${dayMonth(date)}`}
-                                    onClick={() =>
-                                      onToggle(date, employee.id, shift)
-                                    }
-                                  >
-                                    <span className="s-name">{name}</span>
-                                    <span className="s-time">
-                                      {shiftTimeLabel(time)}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                            </td>
-                          ))}
-                          <td className="total-cell">
-                            <span
-                              className={`total-hours${over ? " over" : ""}`}
-                            >
-                              {formatDuration(minutes)}
-                            </span>
-                            {employee.contractHours !== null && (
-                              <span className="total-contract">
-                                de {employee.contractHours}h
-                              </span>
-                            )}
+                              {!known && <option value={value}>{value}</option>}
+                              {CELL_OPTIONS.map(([key, label]) => (
+                                <option key={key} value={key}>
+                                  {label}
+                                </option>
+                              ))}
+                            </select>
                           </td>
-                        </tr>
-                      );
-                    })}
-                  </Fragment>
-                ))}
+                        );
+                      })}
+                      {coverageColumns.map(({ key, coverage, minimum }) => (
+                        <td key={key} className="roster-cov">
+                          {([0, 1] as const).map((index) => {
+                            const shift: ShiftKey = index === 0 ? "A" : "B";
+                            const count = coverage.get(date)?.[shift] ?? 0;
+                            return (
+                              <span
+                                key={shift}
+                                className={`cov${
+                                  count < minimum[index] ? " low" : ""
+                                }`}
+                                title={`${SHIFT_NAMES[index]}: ${count} (mínimo ${minimum[index]})`}
+                              >
+                                <b>{count}</b>
+                                {shift}
+                              </span>
+                            );
+                          })}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
               </tbody>
               <tfoot>
+                {monthView && (
+                  <tr>
+                    <th scope="row" className="roster-day">
+                      Folgas
+                    </th>
+                    {employees.map((employee) => {
+                      const off = daysOff.get(employee.id);
+                      if (!off) return <td key={employee.id} />;
+                      return (
+                        <td key={employee.id}>
+                          <span
+                            className={`total-hours${
+                              off.days > MAX_MONTH_DAYS_OFF ? " over" : ""
+                            }`}
+                          >
+                            {off.days}/{MAX_MONTH_DAYS_OFF}
+                          </span>
+                          <span
+                            className={`total-contract${
+                              off.sundays > MAX_MONTH_SUNDAYS_OFF ? " over" : ""
+                            }`}
+                          >
+                            {off.sundays}/{MAX_MONTH_SUNDAYS_OFF}{" "}
+                            {off.sundays === 1 ? "domingo" : "domingos"}
+                          </span>
+                        </td>
+                      );
+                    })}
+                    <td colSpan={coverageColumns.length} />
+                  </tr>
+                )}
                 <tr>
-                  <th scope="row" className="emp-col coverage-label">
-                    Equipa
+                  <th scope="row" className="roster-day">
+                    Total
                   </th>
-                  {days.map((date) => {
-                    const counts = teamCoverage.get(date) ?? { A: 0, B: 0 };
+                  {employees.map((employee) => {
+                    const minutes = employeeMinutes(state, employee.id, rows);
+                    // O contrato é semanal, por isso só se compara na semana.
+                    const over =
+                      !monthView &&
+                      employee.contractHours !== null &&
+                      minutes > Math.round(employee.contractHours * 60);
                     return (
-                      <td
-                        key={date}
-                        className={`coverage-cell${
-                          date !== selectedDay ? " mobile-day-hidden" : ""
-                        }`}
-                      >
-                        {([0, 1] as const).map((index) => {
-                          const shift: ShiftKey = index === 0 ? "A" : "B";
-                          const count = counts[shift];
-                          const minimum = state.settings.minStaff[index];
-                          const low = count < minimum;
-                          return (
-                            <span
-                              key={shift}
-                              className={`cov${low ? " low" : ""}`}
-                              title={`Equipa no turno de ${SHIFT_NAMES[
-                                index
-                              ].toLowerCase()}: ${count} ${
-                                count === 1 ? "pessoa" : "pessoas"
-                              } (mínimo ${minimum}, sem pizzaiolos)`}
-                            >
-                              <b>{count}</b>
-                              {shift}
-                            </span>
-                          );
-                        })}
+                      <td key={employee.id}>
+                        <span className={`total-hours${over ? " over" : ""}`}>
+                          {formatDuration(minutes)}
+                        </span>
+                        {employee.contractHours !== null && (
+                          <span className="total-contract">
+                            {monthView
+                              ? `${employee.contractHours}h/semana`
+                              : `de ${employee.contractHours}h`}
+                          </span>
+                        )}
                       </td>
                     );
                   })}
-                  <td className="total-cell coverage-total">
+                  <td colSpan={coverageColumns.length}>
                     <span className="total-hours">
-                      {formatDuration(totals.minutes)}
+                      {formatDuration(shownMinutes)}
                     </span>
-                    <span className="total-contract">equipa</span>
+                    <span className="total-contract">
+                      {filtered.length > 0 ? filtered[0].label : "equipa"}
+                    </span>
                   </td>
-                </tr>
-                <tr>
-                  <th scope="row" className="emp-col coverage-label">
-                    Pizzaiolos
-                  </th>
-                  {days.map((date) => {
-                    const counts = pizzaioloCoverage.get(date) ?? {
-                      A: 0,
-                      B: 0,
-                    };
-                    return (
-                      <td
-                        key={date}
-                        className={`coverage-cell${
-                          date !== selectedDay ? " mobile-day-hidden" : ""
-                        }`}
-                      >
-                        {([0, 1] as const).map((index) => {
-                          const shift: ShiftKey = index === 0 ? "A" : "B";
-                          const count = counts[shift];
-                          const minimum = state.settings.minPizzaiolo[index];
-                          const low = count < minimum;
-                          return (
-                            <span
-                              key={shift}
-                              className={`cov${low ? " low" : ""}`}
-                              title={`Pizzaiolos no turno de ${SHIFT_NAMES[
-                                index
-                              ].toLowerCase()}: ${count} (mínimo ${minimum})`}
-                            >
-                              <b>{count}</b>
-                              {shift}
-                            </span>
-                          );
-                        })}
-                      </td>
-                    );
-                  })}
-                  <td className="total-cell coverage-total" />
                 </tr>
               </tfoot>
             </table>
@@ -613,7 +754,7 @@ export default function ScheduleView({
         <section className="card warnings">
           <h3>
             <WarningIcon className="warn-icon" />
-            Avisos da semana
+            {monthView ? "Avisos do mês" : "Avisos da semana"}
             <span className="warn-count">{warnings.length}</span>
           </h3>
           <ul>
@@ -639,7 +780,7 @@ export default function ScheduleView({
 
       <div className="print-only print-foot">
         <span>
-          Mr Pizza · {weekLabel(week)} · {formatDuration(totals.minutes)}{" "}
+          Mr Pizza · {periodLabel} · {formatDuration(totals.minutes)}{" "}
           atribuídas
         </span>
         <span>Gerado no gestor de horários</span>

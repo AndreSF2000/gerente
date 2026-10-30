@@ -1,3 +1,4 @@
+import { DEFAULT_SETTINGS } from "./defaults";
 import type {
   Assignment,
   Employee,
@@ -51,6 +52,9 @@ function readSettings(value: unknown): Settings | null {
   const weekday = readShiftPair(record.weekday);
   const weekend = readShiftPair(record.weekend);
   if (!weekday || !weekend) return null;
+  // Dados antigos não têm o turno intermédio: fica o horário por defeito.
+  const middle =
+    readShiftPair(record.middle) ?? structuredClone(DEFAULT_SETTINGS.middle);
 
   const minStaff = readMinimumPair(record.minStaff);
   if (!minStaff) return null;
@@ -60,6 +64,7 @@ function readSettings(value: unknown): Settings | null {
   return {
     weekday,
     weekend,
+    middle,
     minStaff,
     minPizzaiolo,
   };
@@ -124,7 +129,7 @@ export function sanitizeState(input: unknown): ScheduleState | null {
     const employeeId = typeof entry.employeeId === "string" ? entry.employeeId : "";
     const shift = entry.shift as ShiftKey;
     if (!isRealDate(date) || !employeeIds.has(employeeId)) continue;
-    if (shift !== "A" && shift !== "B") continue;
+    if (shift !== "A" && shift !== "B" && shift !== "C") continue;
     const key = `${date}|${employeeId}|${shift}`;
     if (seen.has(key)) continue;
     seen.add(key);

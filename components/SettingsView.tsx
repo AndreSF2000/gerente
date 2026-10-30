@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SHIFT_NAMES } from "@/lib/defaults";
+import { MIDDLE_NAME, SHIFT_NAMES } from "@/lib/defaults";
 import {
   formatDuration,
   shiftMinutes,
@@ -116,9 +116,12 @@ export default function SettingsView({
     field: "start" | "end",
     value: string,
   ) => {
-    const pair = [...settings[group]] as [ShiftTime, ShiftTime];
-    pair[index] = { ...pair[index], [field]: value };
-    onChangeSettings({ ...settings, [group]: pair });
+    // O índice 2 é o intermédio, guardado à parte por grupo de dias.
+    const key = index === 2 ? "middle" : group;
+    const slot = index === 2 ? (group === "weekday" ? 0 : 1) : index;
+    const pair = [...settings[key]] as [ShiftTime, ShiftTime];
+    pair[slot] = { ...pair[slot], [field]: value };
+    onChangeSettings({ ...settings, [key]: pair });
   };
 
   const updateMinimum = (
@@ -137,7 +140,8 @@ export default function SettingsView({
     {
       key: "weekday" as const,
       title: "Segunda a quinta e domingo",
-      description: "Dois turnos por dia, com o fim a poder passar da meia-noite.",
+      description:
+        "Dia, noite e intermédio, com o fim a poder passar da meia-noite.",
     },
     {
       key: "weekend" as const,
@@ -186,13 +190,17 @@ export default function SettingsView({
               <h3>{group.title}</h3>
               <p>{group.description}</p>
             </div>
-            {[0, 1].map((index) => {
-              const time = settings[group.key][index];
+            {[0, 1, 2].map((index) => {
+              const time =
+                index === 2
+                  ? settings.middle[group.key === "weekday" ? 0 : 1]
+                  : settings[group.key][index];
+              const name = index === 2 ? MIDDLE_NAME : SHIFT_NAMES[index];
               const overnight = timeToMinutes(time.end) <= timeToMinutes(time.start);
               return (
                 <div className="shift-row" key={index}>
                   <span className="shift-label">
-                    <b>{SHIFT_NAMES[index]}</b>
+                    <b>{name}</b>
                     <span>
                       {formatDuration(shiftMinutes(time))}
                       {overnight ? " · termina no dia seguinte" : ""}
@@ -200,7 +208,7 @@ export default function SettingsView({
                   </span>
                   <TimeInput
                     value={time.start}
-                    label={`Início do turno de ${SHIFT_NAMES[index].toLowerCase()} (${group.title})`}
+                    label={`Início do turno ${name.toLowerCase()} (${group.title})`}
                     onChange={(value) =>
                       updateTime(group.key, index, "start", value)
                     }
@@ -210,7 +218,7 @@ export default function SettingsView({
                   </span>
                   <TimeInput
                     value={time.end}
-                    label={`Fim do turno de ${SHIFT_NAMES[index].toLowerCase()} (${group.title})`}
+                    label={`Fim do turno ${name.toLowerCase()} (${group.title})`}
                     onChange={(value) =>
                       updateTime(group.key, index, "end", value)
                     }

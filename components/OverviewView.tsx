@@ -63,6 +63,7 @@ export default function OverviewView({
     const map = new Map<string, DayCoverage>();
     const byId = new Map(state.employees.map((employee) => [employee.id, employee]));
     for (const item of state.assignments) {
+      if (item.shift === "C") continue;
       const entry = map.get(item.date) ?? { ...EMPTY_COVERAGE };
       const employee = byId.get(item.employeeId);
       if (employee && isPizzaiolo(employee)) {

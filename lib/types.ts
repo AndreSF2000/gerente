@@ -1,4 +1,5 @@
-export type ShiftKey = "A" | "B";
+/** A = dia, B = noite, C = intermédio. */
+export type ShiftKey = "A" | "B" | "C";
 
 export type ShiftTime = {
   /** Hora de início no formato HH:MM. */
@@ -12,6 +13,8 @@ export type Settings = {
   weekday: [ShiftTime, ShiftTime];
   /** Turnos de sexta e sábado: [dia, noite]. */
   weekend: [ShiftTime, ShiftTime];
+  /** Turno intermédio: [segunda a quinta e domingo, sexta e sábado]. */
+  middle: [ShiftTime, ShiftTime];
   /** Pessoas mínimas por turno: [dia, noite]. */
   minStaff: [number, number];
   /** Pizzaiolos mínimos por turno: [dia, noite]. */

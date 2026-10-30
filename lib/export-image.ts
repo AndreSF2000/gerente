@@ -1,4 +1,4 @@
-import { SHIFT_NAMES } from "./defaults";
+import { MIDDLE_NAME, SHIFT_NAMES } from "./defaults";
 import {
   addDays,
   daysInMonth,
@@ -9,7 +9,7 @@ import {
   weekdayShort,
 } from "./dates";
 import { groupEmployees, hasEmployeeGroups } from "./team-groups";
-import type { ScheduleState, ShiftKey } from "./types";
+import type { ScheduleState } from "./types";
 
 export type ExportRange = "week" | "fourWeeks" | "month";
 export type ExportGroup = "all" | "pizzaiolos" | "others";
@@ -33,6 +33,8 @@ export const EXPORT_COLORS = {
   day: "#c5d9f1",
   weekend: "#8db4e2",
   off: "#92d050",
+  middle: "#ffe699",
+  middleWeekend: "#ffd966",
   ink: "#000000",
   paper: "#ffffff",
 } as const;
@@ -126,7 +128,7 @@ export function buildShareCaption(
   range: ExportRange,
   group: ExportGroup,
 ): string {
-  const { weekday, weekend } = state.settings;
+  const { weekday, weekend, middle } = state.settings;
   const title =
     group === "pizzaiolos"
       ? "MR PIZZA · HORÁRIO DOS PIZZAIOLOS"
@@ -139,6 +141,7 @@ export function buildShareCaption(
     "",
     `${SHIFT_NAMES[0]}: ${weekday[0].start}–${weekday[0].end} (seg–qui e dom) · ${weekend[0].start}–${weekend[0].end} (sex e sáb)`,
     `${SHIFT_NAMES[1]}: ${weekday[1].start}–${weekday[1].end} (seg–qui e dom) · ${weekend[1].start}–${weekend[1].end} (sex e sáb)`,
+    `${MIDDLE_NAME}: ${middle[0].start}–${middle[0].end} (seg–qui e dom) · ${middle[1].start}–${middle[1].end} (sex e sáb)`,
   ].join("\n");
 }
 
@@ -344,22 +347,24 @@ export function drawScheduleImage(
     employees.forEach((employee, employeeIndex) => {
       const hasDay = assigned.has(`${date}|${employee.id}|A`);
       const hasNight = assigned.has(`${date}|${employee.id}|B`);
-      const shift: ShiftKey | null = hasDay
-        ? "A"
-        : hasNight
-          ? "B"
-          : null;
-      const both = hasDay && hasNight;
-      const label = both
-        ? `${SHIFT_NAMES[0]}+${SHIFT_NAMES[1]}`
-        : shift
-          ? SHIFT_NAMES[shift === "A" ? 0 : 1]
-          : "Folga";
-      const fill = shift
-        ? weekend
-          ? EXPORT_COLORS.weekend
-          : EXPORT_COLORS.day
-        : EXPORT_COLORS.off;
+      const hasMiddle = assigned.has(`${date}|${employee.id}|C`);
+      const names = [
+        hasDay && SHIFT_NAMES[0],
+        hasMiddle && MIDDLE_NAME,
+        hasNight && SHIFT_NAMES[1],
+      ].filter((name) => name !== false);
+      const both = names.length > 1;
+      const label = names.length > 0 ? names.join("+") : "Folga";
+      const fill =
+        names.length === 0
+          ? EXPORT_COLORS.off
+          : hasMiddle && !both
+            ? weekend
+              ? EXPORT_COLORS.middleWeekend
+              : EXPORT_COLORS.middle
+            : weekend
+              ? EXPORT_COLORS.weekend
+              : EXPORT_COLORS.day;
       const columnX = tableX + DAY_COLUMN + employeeIndex * employeeColumn;
 
       ctx.fillStyle = fill;
@@ -442,6 +447,7 @@ export function drawScheduleImage(
   const legendItems = [
     { label: "Dia / Noite", color: EXPORT_COLORS.day },
     { label: "Sexta e sábado", color: EXPORT_COLORS.weekend },
+    { label: MIDDLE_NAME, color: EXPORT_COLORS.middle },
     { label: "Folga", color: EXPORT_COLORS.off },
   ];
   ctx.textAlign = "left";

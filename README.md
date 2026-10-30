@@ -8,15 +8,23 @@ login: abre o site, escolhe a semana e clica nos turnos.
 - O site abre num painel **Resumo** com os turnos de hoje, a cobertura da
   semana, os avisos e atalhos para abrir cada dia no horário.
 - Ecrã de abertura animado com a logo do Mr Pizza enquanto o horário carrega.
-- Grelha semanal de segunda a domingo com dois turnos por dia.
+- Grelha semanal no mesmo formato da imagem do WhatsApp: um dia por linha, um
+  colaborador por coluna, com as mesmas cores (dia/noite, sexta e sábado,
+  folga). Abre no **mês completo**, com opção de ver só a **semana**, e botões
+  **Todos / Pizzaiolos / Colaboradores** para ver cada grupo em separado.
 - Horário próprio de fim de semana: sexta e sábado.
-- Atribuição de turnos com um clique e remoção imediata.
+- Cada célula abre uma lista para escolher: Folga, Dia, Intermédio, Noite ou
+  Dia+Noite. O **Intermédio** aparece a amarelo, no horário e na imagem, e o
+  horário dele define-se nas Definições (não conta para os mínimos de
+  cobertura).
 - Total de horas por colaborador e comparação com o contrato semanal.
+- No mês, linha **Folgas** com as folgas e os domingos de folga de cada pessoa
+  (máximo 7 folgas e 1 domingo por mês), a vermelho e com aviso quando passa.
 - Avisos automáticos de cobertura mínima da equipa (sem pizzaiolos) e dos
   pizzaiolos, excesso de contrato e turno duplo.
 - Navegação entre semanas e botão para copiar o horário da semana anterior.
-- No telemóvel, o horário fica focado num dia, com um seletor dos sete dias e
-  um calendário mensal para planear o mês completo sem arrastar a tabela.
+- No telemóvel, a tabela desliza para o lado com a coluna dos dias fixa, e há
+  um calendário mensal para saltar para qualquer semana.
 - No iPhone instalado, o zoom por pinça e o zoom automático ao tocar nos campos
   estão desativados, para o horário não desalinhar.
 - Gestão da equipa: nome, função, horas de contrato e remoção. A função é
@@ -199,8 +207,12 @@ supabase/
 
 Cada publicação é marcada com uma tag Git (`v0.1.1`, `v0.1.2`, …) e a versão
 aparece no rodapé do site. A numeração passou a usar três números para subir
-mais devagar. A versão atual é **v0.1.3**.
+mais devagar. A versão atual é **v0.1.4**.
 
+- **v0.1.4** — horário no formato da imagem do WhatsApp (dias em linhas,
+  colaboradores em colunas), vista do mês completo, filtro Todos / Pizzaiolos /
+  Colaboradores, turno **Intermédio** a amarelo e contagem de folgas (máximo 7
+  por mês e 1 domingo).
 - **v0.1.3** — o aviso de falta de ligação desaparece assim que as alterações
   pendentes são enviadas para o Supabase.
 - **v0.1.2** — modo offline: dá para continuar a preparar o horário sem
