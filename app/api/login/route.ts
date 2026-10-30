@@ -1,11 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  AUTH_COOKIE,
-  AUTH_MAX_AGE,
-  authCookieValue,
-  authEnabled,
-  isValidPin,
-} from "@/lib/auth";
+import { authEnabled, isValidPin, setAuthCookie } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -41,12 +35,6 @@ export async function POST(request: Request) {
   }
 
   const response = NextResponse.json({ ok: true }, { headers: NO_STORE_HEADERS });
-  response.cookies.set(AUTH_COOKIE, authCookieValue(), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    path: "/",
-    maxAge: AUTH_MAX_AGE,
-  });
+  setAuthCookie(response);
   return response;
 }

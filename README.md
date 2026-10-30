@@ -169,8 +169,12 @@ ao tocar nos campos, mantendo o horário alinhado no telemóvel.
 - O site pede um **PIN de acesso** (variável `APP_PINS`, um ou mais PINs
   separados por vírgulas). Depois de entrar, cada dispositivo fica com acesso
   durante um ano; mudar os PINs obriga todos a entrar outra vez. Sem
-  `APP_PINS`, o site fica fechado em produção. A app instalada no iPhone pede o
-  PIN uma vez, à parte do Safari.
+  `APP_PINS`, o site fica fechado em produção. O PIN tem 6 dígitos e entra
+  sozinho ao escrever o último; é pedido sempre que a app abre e ao voltar
+  depois de 2 minutos noutra app.
+- **Face ID** (só telemóvel): em Definições → Face ID ativa-se neste telemóvel
+  e passa a aparecer o botão do Face ID no teclado do PIN. Usa passkeys
+  (WebAuthn), guardadas na linha `id = 2` da mesma tabela do Supabase.
 - Se duas pessoas editarem ao mesmo tempo, ganha a última gravação.
 - Em **Definições → Dados e backup** podes exportar um JSON com equipa, turnos e
   configurações. Esse ficheiro serve de cópia de segurança ou para importar
@@ -210,8 +214,10 @@ supabase/
 
 Cada publicação é marcada com uma tag Git (`v0.1.1`, `v0.1.2`, …) e a versão
 aparece no rodapé do site. A numeração passou a usar três números para subir
-mais devagar. A versão atual é **v0.1.6**.
+mais devagar. A versão atual é **v0.1.7**.
 
+- **v0.1.7** — PIN de 6 dígitos que entra sozinho, pedido sempre que a app
+  abre, e entrada com Face ID (passkeys) ativável nas Definições do telemóvel.
 - **v0.1.6** — PIN de acesso ao site (variável `APP_PINS`), com teclado
   numérico no telemóvel e campo normal no computador.
 - **v0.1.5** — no telemóvel, o horário do mês cabe no ecrã sem arrastar para

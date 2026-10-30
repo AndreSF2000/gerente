@@ -24,6 +24,9 @@ const IS_PRODUCTION = process.env.NODE_ENV === "production";
 const FILE_PATH = path.join(process.cwd(), ".data", "schedule.json");
 const TABLE = "mr_pizza_schedule";
 const ROW_ID = 1;
+/** Passkeys do Face ID, numa linha à parte da mesma tabela. */
+const PASSKEYS_ROW_ID = 2;
+const PASSKEYS_FILE = path.join(process.cwd(), ".data", "passkeys.json");
 
 const supabase =
   SUPABASE_URL && SUPABASE_KEY
@@ -124,4 +127,60 @@ export async function writeState(
   await fs.writeFile(temporaryPath, JSON.stringify(state, null, 2), "utf8");
   await fs.rename(temporaryPath, FILE_PATH);
   return { mode: "file", updatedAt: new Date().toISOString() };
+}
+
+export type StoredPasskey = {
+  id: string;
+  /** Chave pública em base64url. */
+  publicKey: string;
+  counter: number;
+  transports?: string[];
+  device: string;
+  createdAt: string;
+};
+
+export async function readPasskeys(): Promise<StoredPasskey[]> {
+  if (supabase) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("data")
+      .eq("id", PASSKEYS_ROW_ID)
+      .maybeSingle();
+    if (error) throw new Error(`Supabase: ${error.message}`);
+    return Array.isArray(data?.data) ? (data.data as StoredPasskey[]) : [];
+  }
+
+  if (IS_PRODUCTION) {
+    throw new StorageUnavailableError(
+      "SUPABASE_URL e SUPABASE_SECRET_KEY não estão definidos.",
+    );
+  }
+
+  try {
+    const stored: unknown = JSON.parse(await fs.readFile(PASSKEYS_FILE, "utf8"));
+    return Array.isArray(stored) ? (stored as StoredPasskey[]) : [];
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    return [];
+  }
+}
+
+export async function writePasskeys(passkeys: StoredPasskey[]): Promise<void> {
+  if (supabase) {
+    const { error } = await supabase.from(TABLE).upsert(
+      { id: PASSKEYS_ROW_ID, data: passkeys, updated_at: new Date().toISOString() },
+      { onConflict: "id" },
+    );
+    if (error) throw new Error(`Supabase: ${error.message}`);
+    return;
+  }
+
+  if (IS_PRODUCTION) {
+    throw new StorageUnavailableError(
+      "SUPABASE_URL e SUPABASE_SECRET_KEY não estão definidos.",
+    );
+  }
+
+  await fs.mkdir(path.dirname(PASSKEYS_FILE), { recursive: true });
+  await fs.writeFile(PASSKEYS_FILE, JSON.stringify(passkeys, null, 2), "utf8");
 }

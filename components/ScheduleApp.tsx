@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { defaultState } from "@/lib/defaults";
 import { addDays, todayISO, weekDays, weekStart } from "@/lib/dates";
 import { sanitizeState } from "@/lib/sanitize";
+import { RELOCK_AFTER_MS, UNLOCK_KEY, isUnlocked, writeKey } from "@/lib/unlock";
 import { APP_VERSION } from "@/lib/version";
 import type {
   Employee,
@@ -210,6 +211,11 @@ export default function ScheduleApp() {
     };
 
     async function load() {
+      // O PIN (ou o Face ID) é pedido sempre que a app abre.
+      if (!isUnlocked()) {
+        window.location.replace("/entrar");
+        return;
+      }
       setWeek(weekStart(todayISO()));
 
       // Alterações que ficaram por enviar neste dispositivo têm prioridade.
@@ -287,6 +293,21 @@ export default function ScheduleApp() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  // Depois de algum tempo noutra app, volta a pedir o PIN ao regressar.
+  useEffect(() => {
+    let hiddenAt = 0;
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        hiddenAt = Date.now();
+      } else if (hiddenAt && Date.now() - hiddenAt > RELOCK_AFTER_MS) {
+        writeKey("session", UNLOCK_KEY, null);
+        window.location.replace("/entrar");
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
   }, []);
 
   const persist = useCallback(

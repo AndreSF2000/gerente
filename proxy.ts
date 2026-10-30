@@ -19,8 +19,8 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // A página de entrada, o login e os ícones ficam de fora.
+  // A página de entrada, o login (PIN e Face ID) e os ícones ficam de fora.
   matcher: [
-    "/((?!entrar|api/login|_next/|icon|apple-touch-icon|manifest|favicon).*)",
+    "/((?!entrar|api/login|api/passkey/login|_next/|icon|apple-touch-icon|manifest|favicon).*)",
   ],
 };

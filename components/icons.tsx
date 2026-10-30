@@ -218,3 +218,26 @@ export function TeamIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function FaceIdIcon({ className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 8V5.5A2.5 2.5 0 0 1 5.5 3H8" />
+      <path d="M16 3h2.5A2.5 2.5 0 0 1 21 5.5V8" />
+      <path d="M21 16v2.5a2.5 2.5 0 0 1-2.5 2.5H16" />
+      <path d="M8 21H5.5A2.5 2.5 0 0 1 3 18.5V16" />
+      <path d="M8.5 9v1.5M15.5 9v1.5" />
+      <path d="M12 9v4.2h-1" />
+      <path d="M9 15.8c1.7 1.4 4.3 1.4 6 0" />
+    </svg>
+  );
+}

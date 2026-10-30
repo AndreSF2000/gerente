@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MIDDLE_NAME, SHIFT_NAMES } from "@/lib/defaults";
+import FaceIdSettings from "./FaceIdSettings";
 import {
   formatDuration,
   shiftMinutes,
@@ -344,6 +345,8 @@ export default function SettingsView({
           )}
         </div>
       </section>
+
+      <FaceIdSettings />
     </div>
   );
 }
