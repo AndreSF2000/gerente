@@ -23,8 +23,8 @@ login: abre o site, escolhe a semana e clica nos turnos.
 - Avisos automáticos de cobertura mínima da equipa (sem pizzaiolos) e dos
   pizzaiolos, excesso de contrato e turno duplo.
 - Navegação entre semanas e botão para copiar o horário da semana anterior.
-- No telemóvel, a tabela desliza para o lado com a coluna dos dias fixa, e há
-  um calendário mensal para saltar para qualquer semana.
+- No telemóvel, a tabela ajusta-se à largura do ecrã, com uma coluna por
+  pessoa e sem arrastar para o lado.
 - No iPhone instalado, o zoom por pinça e o zoom automático ao tocar nos campos
   estão desativados, para o horário não desalinhar.
 - Gestão da equipa: nome, função, horas de contrato e remoção. A função é
@@ -207,8 +207,10 @@ supabase/
 
 Cada publicação é marcada com uma tag Git (`v0.1.1`, `v0.1.2`, …) e a versão
 aparece no rodapé do site. A numeração passou a usar três números para subir
-mais devagar. A versão atual é **v0.1.4**.
+mais devagar. A versão atual é **v0.1.5**.
 
+- **v0.1.5** — no telemóvel, o horário do mês cabe no ecrã sem arrastar para
+  o lado (colunas de cobertura escondidas, texto mais compacto).
 - **v0.1.4** — horário no formato da imagem do WhatsApp (dias em linhas,
   colaboradores em colunas), vista do mês completo, filtro Todos / Pizzaiolos /
   Colaboradores, turno **Intermédio** a amarelo e contagem de folgas (máximo 7

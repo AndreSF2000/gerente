@@ -457,7 +457,7 @@ export default function ScheduleView({
               </div>
             )}
             <span className="grid-hint">
-              Clica numa célula para escolher o turno.
+              Toca numa célula para escolher o turno.
             </span>
             <span className="grid-hint subtle">
               {totals.assignments} {totals.assignments === 1 ? "turno" : "turnos"}{" "}
@@ -558,7 +558,7 @@ export default function ScheduleView({
               <thead>
                 {showGroups && (
                   <tr className="roster-groups">
-                    <td />
+                    <td className="roster-day" />
                     {visibleGroups.map((group) => (
                       <th
                         key={group.key}
@@ -700,13 +700,12 @@ export default function ScheduleView({
                               off.sundays > MAX_MONTH_SUNDAYS_OFF ? " over" : ""
                             }`}
                           >
-                            {off.sundays}/{MAX_MONTH_SUNDAYS_OFF}{" "}
-                            {off.sundays === 1 ? "domingo" : "domingos"}
+                            {off.sundays}/{MAX_MONTH_SUNDAYS_OFF} dom.
                           </span>
                         </td>
                       );
                     })}
-                    <td colSpan={coverageColumns.length} />
+                    <td colSpan={coverageColumns.length} className="roster-cov" />
                   </tr>
                 )}
                 <tr>
@@ -735,7 +734,7 @@ export default function ScheduleView({
                       </td>
                     );
                   })}
-                  <td colSpan={coverageColumns.length}>
+                  <td colSpan={coverageColumns.length} className="roster-cov">
                     <span className="total-hours">
                       {formatDuration(shownMinutes)}
                     </span>

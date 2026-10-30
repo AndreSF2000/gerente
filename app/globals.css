@@ -886,6 +886,69 @@ button {
   background: var(--surface-alt);
 }
 
+/* Telemóvel: todas as colunas cabem no ecrã, sem arrastar para o lado. */
+@media (max-width: 720px) {
+  .roster {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .roster .roster-day {
+    width: 54px;
+    min-width: 0;
+    padding: 6px 2px !important;
+    font-size: 12px;
+  }
+
+  .roster thead .roster-emp {
+    width: auto;
+    min-width: 0;
+    padding: 7px 2px;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .roster-emp small {
+    font-size: 9.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .roster .roster-groups th {
+    padding: 5px 2px;
+    font-size: 9.5px;
+    letter-spacing: 0.03em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .roster .roster-cov-head,
+  .roster .roster-cov {
+    display: none;
+  }
+
+  .roster-cell {
+    min-height: 42px;
+    padding: 10px 1px;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .roster tfoot td {
+    padding: 6px 1px;
+  }
+
+  .roster tfoot .total-hours {
+    font-size: 12.5px;
+  }
+
+  .roster tfoot .total-contract {
+    font-size: 9.5px;
+  }
+}
+
 .cov {
   display: inline-flex;
   align-items: center;
