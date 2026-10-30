@@ -240,6 +240,10 @@ export default function ScheduleApp() {
           cache: "no-store",
           signal: controller.signal,
         });
+        if (response.status === 401) {
+          window.location.replace("/entrar");
+          return;
+        }
         if (response.status === 503) {
           const payload = (await response.json().catch(() => null)) as {
             code?: string;
@@ -304,6 +308,13 @@ export default function ScheduleApp() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(next),
         });
+
+        if (response.status === 401) {
+          // Guarda para enviar depois de voltar a pôr o PIN.
+          markPendingLocal(true);
+          window.location.replace("/entrar");
+          return;
+        }
 
         if (response.status === 503) {
           const payload = (await response.json().catch(() => null)) as {

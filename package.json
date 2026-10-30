@@ -1,6 +1,6 @@
 {
   "name": "mr-pizza-horarios",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "engines": {
     "node": ">=20.9.0"

@@ -133,6 +133,7 @@ outra.
 | --------------------- | ---------------------------------- | ------------------------------------------------------ |
 | `SUPABASE_URL`        | Para sincronizar entre dispositivos | Project URL do Supabase.                               |
 | `SUPABASE_SECRET_KEY` | Para sincronizar entre dispositivos | Secret key (`sb_secret_...`), só para uso no servidor. |
+| `APP_PINS`            | Sim, em produção                   | PINs de acesso ao site, separados por vírgulas.        |
 
 Também é aceite o nome antigo `SUPABASE_SERVICE_ROLE_KEY`, para projetos que
 ainda usam a chave `service_role` legada.
@@ -165,9 +166,11 @@ ao tocar nos campos, mantendo o horário alinhado no telemóvel.
 - A tabela tem RLS ativo e não tem políticas. O acesso é retirado aos papéis
   `anon` e `authenticated`, por isso a publishable key não consegue ler nem
   escrever nada. Só a secret key do servidor (`service_role`) tem acesso.
-- Isto protege a base de dados, mas não o site: a aplicação não tem login e quem
-  tiver o endereço consegue ver e alterar o horário. Não partilhes o link
-  publicamente.
+- O site pede um **PIN de acesso** (variável `APP_PINS`, um ou mais PINs
+  separados por vírgulas). Depois de entrar, cada dispositivo fica com acesso
+  durante um ano; mudar os PINs obriga todos a entrar outra vez. Sem
+  `APP_PINS`, o site fica fechado em produção. A app instalada no iPhone pede o
+  PIN uma vez, à parte do Safari.
 - Se duas pessoas editarem ao mesmo tempo, ganha a última gravação.
 - Em **Definições → Dados e backup** podes exportar um JSON com equipa, turnos e
   configurações. Esse ficheiro serve de cópia de segurança ou para importar
@@ -207,8 +210,10 @@ supabase/
 
 Cada publicação é marcada com uma tag Git (`v0.1.1`, `v0.1.2`, …) e a versão
 aparece no rodapé do site. A numeração passou a usar três números para subir
-mais devagar. A versão atual é **v0.1.5**.
+mais devagar. A versão atual é **v0.1.6**.
 
+- **v0.1.6** — PIN de acesso ao site (variável `APP_PINS`), com teclado
+  numérico no telemóvel e campo normal no computador.
 - **v0.1.5** — no telemóvel, o horário do mês cabe no ecrã sem arrastar para
   o lado (colunas de cobertura escondidas, texto mais compacto).
 - **v0.1.4** — horário no formato da imagem do WhatsApp (dias em linhas,
