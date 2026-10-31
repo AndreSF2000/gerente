@@ -172,7 +172,7 @@ ao tocar nos campos, mantendo o horário alinhado no telemóvel.
   `APP_PINS`, o site fica fechado em produção. O PIN tem 6 dígitos e entra
   sozinho ao escrever o último; é pedido sempre que a app abre e ao voltar
   depois de 2 minutos noutra app.
-- **Face ID** (só telemóvel): em Definições → Face ID ativa-se neste telemóvel
+- **Face ID** (só iPhone, no Safari ou na app instalada): em Definições → Face ID ativa-se neste telemóvel
   e passa a aparecer o botão do Face ID no teclado do PIN. Usa passkeys
   (WebAuthn), guardadas na linha `id = 2` da mesma tabela do Supabase.
 - Se duas pessoas editarem ao mesmo tempo, ganha a última gravação.
@@ -214,8 +214,10 @@ supabase/
 
 Cada publicação é marcada com uma tag Git (`v0.1.1`, `v0.1.2`, …) e a versão
 aparece no rodapé do site. A numeração passou a usar três números para subir
-mais devagar. A versão atual é **v0.1.7**.
+mais devagar. A versão atual é **v0.1.8**.
 
+- **v0.1.8** — teclado do PIN sem o botão C; Face ID só no iPhone (Safari ou
+  app instalada) e a pedir a chave do próprio aparelho.
 - **v0.1.7** — PIN de 6 dígitos que entra sozinho, pedido sempre que a app
   abre, e entrada com Face ID (passkeys) ativável nas Definições do telemóvel.
 - **v0.1.6** — PIN de acesso ao site (variável `APP_PINS`), com teclado

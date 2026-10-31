@@ -36,9 +36,13 @@ export function isUnlocked(): boolean {
   }
 }
 
-/** Face ID só em ecrãs táteis com autenticação do próprio aparelho. */
+/**
+ * Face ID só no iPhone, no Safari ou na app instalada a partir dele. O Chrome e
+ * outros browsers no iPhone guardariam a chave no gestor de palavras-passe deles.
+ */
 export async function faceIdAvailable(): Promise<boolean> {
-  if (!window.matchMedia("(pointer: coarse)").matches) return false;
+  const agent = navigator.userAgent;
+  if (!/iPhone/.test(agent) || /CriOS|FxiOS|EdgiOS|OPiOS/.test(agent)) return false;
   if (!window.PublicKeyCredential) return false;
   return PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(
     () => false,

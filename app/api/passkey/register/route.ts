@@ -25,6 +25,8 @@ export async function GET(request: NextRequest) {
     rpID,
     userName: "Mr Pizza",
     attestationType: "none",
+    // Pede a chave do próprio aparelho (Face ID) em vez de outro gestor.
+    preferredAuthenticatorType: "localDevice",
     excludeCredentials: passkeys.map(({ id, transports }) => ({ id, transports })),
     authenticatorSelection: {
       authenticatorAttachment: "platform",

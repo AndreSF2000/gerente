@@ -34,7 +34,10 @@ export async function GET(request: NextRequest) {
     userVerification: "required",
   });
 
-  const response = NextResponse.json(options, { headers: NO_STORE_HEADERS });
+  const response = NextResponse.json(
+    { ...options, hints: ["client-device"] },
+    { headers: NO_STORE_HEADERS },
+  );
   const challenge = signChallenge(options.challenge);
   response.cookies.set(CHALLENGE_COOKIE, challenge.value, {
     httpOnly: true,

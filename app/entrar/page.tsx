@@ -159,15 +159,7 @@ export default function EntrarPage() {
               <FaceIdIcon className="pin-faceid-icon" />
             </button>
           ) : (
-            <button
-              type="button"
-              className="pin-key is-action"
-              aria-label="Limpar"
-              disabled={busy || pin === ""}
-              onClick={() => type("")}
-            >
-              C
-            </button>
+            <span aria-hidden="true" />
           )}
           <button
             type="button"
